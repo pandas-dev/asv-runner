@@ -1084,8 +1084,8 @@
             [
                 "2",
                 "3.0",
-                "4",
-                "5.0"
+                "np.int32(4)",
+                "np.float64(5.0)"
             ],
             [
                 "<built-in function add>",
@@ -10949,7 +10949,7 @@
         "warmup_time": -1
     },
     "indexing_engines.MaskedNumericEngineIndexing.time_get_loc": {
-        "code": "class MaskedNumericEngineIndexing:\n    def time_get_loc(self, engine_and_dtype, index_type, unique, N):\n        self.data.get_loc(self.key_early)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n        dtype = dtype.lower()\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.zeros(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n    \n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n            mask[-1] = True\n    \n        self.data = engine(BaseMaskedArray(arr, mask))\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
+        "code": "class MaskedNumericEngineIndexing:\n    def time_get_loc(self, engine_and_dtype, index_type, unique, N):\n        self.data.get_loc(self.key_early)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n        dtype = dtype.lower()\n    \n        if (\n            index_type == \"non_monotonic\"\n            and dtype in [\"int16\", \"int8\", \"uint8\"]\n            and unique\n        ):\n            # Values overflow\n            raise NotImplementedError\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.zeros(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n    \n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n            mask[-1] = True\n    \n        self.data = engine(BaseMaskedArray(arr, mask))\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
         "min_run_count": 2,
         "name": "indexing_engines.MaskedNumericEngineIndexing.time_get_loc",
         "number": 0,
@@ -10990,11 +10990,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "7c394755b12d2c3e21c69c1654a1096049d5ff48d44e9fa5e68c13a5edd9a2de",
+        "version": "8147ff55006b557221bc8ffdf586472f35bfdbbe56834bb19168d86113a1120a",
         "warmup_time": -1
     },
     "indexing_engines.MaskedNumericEngineIndexing.time_get_loc_near_middle": {
-        "code": "class MaskedNumericEngineIndexing:\n    def time_get_loc_near_middle(self, engine_and_dtype, index_type, unique, N):\n        # searchsorted performance may be different near the middle of a range\n        #  vs near an endpoint\n        self.data.get_loc(self.key_middle)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n        dtype = dtype.lower()\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.zeros(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n    \n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n            mask[-1] = True\n    \n        self.data = engine(BaseMaskedArray(arr, mask))\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
+        "code": "class MaskedNumericEngineIndexing:\n    def time_get_loc_near_middle(self, engine_and_dtype, index_type, unique, N):\n        # searchsorted performance may be different near the middle of a range\n        #  vs near an endpoint\n        self.data.get_loc(self.key_middle)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n        dtype = dtype.lower()\n    \n        if (\n            index_type == \"non_monotonic\"\n            and dtype in [\"int16\", \"int8\", \"uint8\"]\n            and unique\n        ):\n            # Values overflow\n            raise NotImplementedError\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.zeros(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n    \n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n            mask = np.zeros(N * 3, dtype=np.bool_)\n            mask[-1] = True\n    \n        self.data = engine(BaseMaskedArray(arr, mask))\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
         "min_run_count": 2,
         "name": "indexing_engines.MaskedNumericEngineIndexing.time_get_loc_near_middle",
         "number": 0,
@@ -11035,11 +11035,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "33a4604e2edf65feda97d75cabe7a94bc517e629c63acaf5c3a788c199e7eff6",
+        "version": "da55f5bd8347f7876978883cce1e07c31d1001c66e794b28ab30815a88132179",
         "warmup_time": -1
     },
     "indexing_engines.NumericEngineIndexing.time_get_loc": {
-        "code": "class NumericEngineIndexing:\n    def time_get_loc(self, engine_and_dtype, index_type, unique, N):\n        self.data.get_loc(self.key_early)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.empty(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n    \n        self.data = engine(arr)\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
+        "code": "class NumericEngineIndexing:\n    def time_get_loc(self, engine_and_dtype, index_type, unique, N):\n        self.data.get_loc(self.key_early)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n    \n        if (\n            index_type == \"non_monotonic\"\n            and dtype in [np.int16, np.int8, np.uint8]\n            and unique\n        ):\n            # Values overflow\n            raise NotImplementedError\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.empty(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n    \n        self.data = engine(arr)\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
         "min_run_count": 2,
         "name": "indexing_engines.NumericEngineIndexing.time_get_loc",
         "number": 0,
@@ -11080,11 +11080,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "65b3d11b3c6faf12c8e905404b7d91d9b5495adad1b0e3d7af303b94c66d754d",
+        "version": "cdddb646d94d27f93f40e1eba3b0b2377db03a3d893d2200b0171572ad40a9a0",
         "warmup_time": -1
     },
     "indexing_engines.NumericEngineIndexing.time_get_loc_near_middle": {
-        "code": "class NumericEngineIndexing:\n    def time_get_loc_near_middle(self, engine_and_dtype, index_type, unique, N):\n        # searchsorted performance may be different near the middle of a range\n        #  vs near an endpoint\n        self.data.get_loc(self.key_middle)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.empty(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n    \n        self.data = engine(arr)\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
+        "code": "class NumericEngineIndexing:\n    def time_get_loc_near_middle(self, engine_and_dtype, index_type, unique, N):\n        # searchsorted performance may be different near the middle of a range\n        #  vs near an endpoint\n        self.data.get_loc(self.key_middle)\n\n    def setup(self, engine_and_dtype, index_type, unique, N):\n        engine, dtype = engine_and_dtype\n    \n        if (\n            index_type == \"non_monotonic\"\n            and dtype in [np.int16, np.int8, np.uint8]\n            and unique\n        ):\n            # Values overflow\n            raise NotImplementedError\n    \n        if index_type == \"monotonic_incr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n        elif index_type == \"monotonic_decr\":\n            if unique:\n                arr = np.arange(N * 3, dtype=dtype)[::-1]\n            else:\n                arr = np.array([3, 2, 1], dtype=dtype).repeat(N)\n        else:\n            assert index_type == \"non_monotonic\"\n            if unique:\n                arr = np.empty(N * 3, dtype=dtype)\n                arr[:N] = np.arange(N * 2, N * 3, dtype=dtype)\n                arr[N:] = np.arange(N * 2, dtype=dtype)\n            else:\n                arr = np.array([1, 2, 3], dtype=dtype).repeat(N)\n    \n        self.data = engine(arr)\n        # code below avoids populating the mapping etc. while timing.\n        self.data.get_loc(2)\n    \n        self.key_middle = arr[len(arr) // 2]\n        self.key_early = arr[2]",
         "min_run_count": 2,
         "name": "indexing_engines.NumericEngineIndexing.time_get_loc_near_middle",
         "number": 0,
@@ -11125,7 +11125,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "beaa25ddfea801a7e7b25d2d14e6fa0d37145eb2280a06ed4fdc06bbf2b9dc37",
+        "version": "835807a60a1105089d68a94544883babde6c2c9c29993be444747f048fae3533",
         "warmup_time": -1
     },
     "indexing_engines.ObjectEngineIndexing.time_get_loc": {
@@ -15282,8 +15282,8 @@
                 "'foo'",
                 "b'bar'",
                 "None",
-                "numpy.datetime64('1970-01-01T00:00:00.000000123')",
-                "numpy.timedelta64(123,'ns')",
+                "np.datetime64('1970-01-01T00:00:00.000000123')",
+                "np.timedelta64(123,'ns')",
                 "NaT",
                 "<NA>",
                 "array('123', dtype='<U3')",
@@ -15319,8 +15319,8 @@
                 "'foo'",
                 "b'bar'",
                 "None",
-                "numpy.datetime64('1970-01-01T00:00:00.000000123')",
-                "numpy.timedelta64(123,'ns')",
+                "np.datetime64('1970-01-01T00:00:00.000000123')",
+                "np.timedelta64(123,'ns')",
                 "NaT",
                 "<NA>",
                 "array('123', dtype='<U3')",

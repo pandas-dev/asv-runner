@@ -6141,7 +6141,7 @@
         "warmup_time": -1
     },
     "gil.ParallelDatetimeFields.time_datetime_field_day": {
-        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_day(self):\n        @run_parallel(num_threads=2)\n        def run(dti):\n            dti.day\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
+        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_day(self):\n        @test_parallel(num_threads=2)\n        def run(dti):\n            dti.day\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
         "min_run_count": 2,
         "name": "gil.ParallelDatetimeFields.time_datetime_field_day",
         "number": 0,
@@ -6152,11 +6152,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "f6d7afa978189e0e45e01567bd77bc12f957a58a7030948852ce5956428a3d3d",
+        "version": "57949cef8376be9aca572d8c68a05289b9950b538c13e861ad1b71df817c3515",
         "warmup_time": -1
     },
     "gil.ParallelDatetimeFields.time_datetime_field_daysinmonth": {
-        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_daysinmonth(self):\n        @run_parallel(num_threads=2)\n        def run(dti):\n            dti.days_in_month\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
+        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_daysinmonth(self):\n        @test_parallel(num_threads=2)\n        def run(dti):\n            dti.days_in_month\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
         "min_run_count": 2,
         "name": "gil.ParallelDatetimeFields.time_datetime_field_daysinmonth",
         "number": 0,
@@ -6167,11 +6167,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "c841db39f1b9e80d925bdc925e24660652e6f2d7956444f5e88460edcce990c0",
+        "version": "e08964e060471859275a5a734b94e650445f8e0db22890e06d5c36b207e103a8",
         "warmup_time": -1
     },
     "gil.ParallelDatetimeFields.time_datetime_field_normalize": {
-        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_normalize(self):\n        @run_parallel(num_threads=2)\n        def run(dti):\n            dti.normalize()\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
+        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_normalize(self):\n        @test_parallel(num_threads=2)\n        def run(dti):\n            dti.normalize()\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
         "min_run_count": 2,
         "name": "gil.ParallelDatetimeFields.time_datetime_field_normalize",
         "number": 0,
@@ -6182,11 +6182,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "0f6884c646c211b60e927ce42ec327398370dcb8f24cfbdb2910111f808b84db",
+        "version": "59282e48b58fc897cac7af777786d7dc152983bf0f08d5e8ca7049410a9edfb1",
         "warmup_time": -1
     },
     "gil.ParallelDatetimeFields.time_datetime_field_year": {
-        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_year(self):\n        @run_parallel(num_threads=2)\n        def run(dti):\n            dti.year\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
+        "code": "class ParallelDatetimeFields:\n    def time_datetime_field_year(self):\n        @test_parallel(num_threads=2)\n        def run(dti):\n            dti.year\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
         "min_run_count": 2,
         "name": "gil.ParallelDatetimeFields.time_datetime_field_year",
         "number": 0,
@@ -6197,11 +6197,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "196a4f49a5eb025b04ea9e6fd8aeb191256fd57d69803e3cd7f606b52369811b",
+        "version": "4e6d8e9847ac5022c75aabaff81f2a4ce4528c29b8d2f44d50f8729b732bef51",
         "warmup_time": -1
     },
     "gil.ParallelDatetimeFields.time_datetime_to_period": {
-        "code": "class ParallelDatetimeFields:\n    def time_datetime_to_period(self):\n        @run_parallel(num_threads=2)\n        def run(dti):\n            dti.to_period(\"s\")\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
+        "code": "class ParallelDatetimeFields:\n    def time_datetime_to_period(self):\n        @test_parallel(num_threads=2)\n        def run(dti):\n            dti.to_period(\"s\")\n    \n        run(self.dti)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
         "min_run_count": 2,
         "name": "gil.ParallelDatetimeFields.time_datetime_to_period",
         "number": 0,
@@ -6212,11 +6212,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "091654db6076cfde19f81ac789ccb2bfb39b863bb47312c341cd0beac35b20d4",
+        "version": "cf5a4f24f7ea1d7e1842a834d7a3ed311331d1375098ccb8bd2423d9df91f03c",
         "warmup_time": -1
     },
     "gil.ParallelDatetimeFields.time_period_to_datetime": {
-        "code": "class ParallelDatetimeFields:\n    def time_period_to_datetime(self):\n        @run_parallel(num_threads=2)\n        def run(period):\n            period.to_timestamp()\n    \n        run(self.period)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
+        "code": "class ParallelDatetimeFields:\n    def time_period_to_datetime(self):\n        @test_parallel(num_threads=2)\n        def run(period):\n            period.to_timestamp()\n    \n        run(self.period)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelDatetimeFields:\n    def setup(self):\n        N = 10**6\n        self.dti = date_range(\"1900-01-01\", periods=N, freq=\"min\")\n        self.period = self.dti.to_period(\"D\")",
         "min_run_count": 2,
         "name": "gil.ParallelDatetimeFields.time_period_to_datetime",
         "number": 0,
@@ -6227,11 +6227,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "8fbfbdda5d921395f4a1df8893c85265e4cbcfd3d604662c4158d168bf749ee3",
+        "version": "3766967574deb647b538a27545eb395e8fce97e83e988ac9785f6865c97084d1",
         "warmup_time": -1
     },
     "gil.ParallelFactorize.time_loop": {
-        "code": "class ParallelFactorize:\n    def time_loop(self, threads):\n        for i in range(threads):\n            self.loop()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelFactorize:\n    def setup(self, threads):\n        strings = Index([f\"i-{i}\" for i in range(100000)], dtype=object)\n    \n        @run_parallel(num_threads=threads)\n        def parallel():\n            factorize(strings)\n    \n        self.parallel = parallel\n    \n        def loop():\n            factorize(strings)\n    \n        self.loop = loop",
+        "code": "class ParallelFactorize:\n    def time_loop(self, threads):\n        for i in range(threads):\n            self.loop()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelFactorize:\n    def setup(self, threads):\n        strings = Index([f\"i-{i}\" for i in range(100000)], dtype=object)\n    \n        @test_parallel(num_threads=threads)\n        def parallel():\n            factorize(strings)\n    \n        self.parallel = parallel\n    \n        def loop():\n            factorize(strings)\n    \n        self.loop = loop",
         "min_run_count": 2,
         "name": "gil.ParallelFactorize.time_loop",
         "number": 1,
@@ -6250,11 +6250,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "acab89f90eff5e36ada5623485bce92d4c623366bfccd56d8dcbdb2014afd154",
+        "version": "3d702042bf0b72599271c4f0aca5d1cc55c8de89f03071bd59d498a5dbdb8448",
         "warmup_time": -1
     },
     "gil.ParallelFactorize.time_parallel": {
-        "code": "class ParallelFactorize:\n    def time_parallel(self, threads):\n        self.parallel()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelFactorize:\n    def setup(self, threads):\n        strings = Index([f\"i-{i}\" for i in range(100000)], dtype=object)\n    \n        @run_parallel(num_threads=threads)\n        def parallel():\n            factorize(strings)\n    \n        self.parallel = parallel\n    \n        def loop():\n            factorize(strings)\n    \n        self.loop = loop",
+        "code": "class ParallelFactorize:\n    def time_parallel(self, threads):\n        self.parallel()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelFactorize:\n    def setup(self, threads):\n        strings = Index([f\"i-{i}\" for i in range(100000)], dtype=object)\n    \n        @test_parallel(num_threads=threads)\n        def parallel():\n            factorize(strings)\n    \n        self.parallel = parallel\n    \n        def loop():\n            factorize(strings)\n    \n        self.loop = loop",
         "min_run_count": 2,
         "name": "gil.ParallelFactorize.time_parallel",
         "number": 1,
@@ -6273,11 +6273,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "51db7b1746ba01ebf760262d0a3beef5cc438429f09cde63e31787e2870fa88e",
+        "version": "7a105748ab3e006bf2a891c0883f2103a5c368902e13d14f3a64656e1968793a",
         "warmup_time": -1
     },
     "gil.ParallelGroupbyMethods.time_loop": {
-        "code": "class ParallelGroupbyMethods:\n    def time_loop(self, threads, method):\n        for i in range(threads):\n            self.loop()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelGroupbyMethods:\n    def setup(self, threads, method):\n        N = 10**6\n        ngroups = 10**3\n        df = DataFrame(\n            {\"key\": np.random.randint(0, ngroups, size=N), \"data\": np.random.randn(N)}\n        )\n    \n        @run_parallel(num_threads=threads)\n        def parallel():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.parallel = parallel\n    \n        def loop():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.loop = loop",
+        "code": "class ParallelGroupbyMethods:\n    def time_loop(self, threads, method):\n        for i in range(threads):\n            self.loop()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelGroupbyMethods:\n    def setup(self, threads, method):\n        N = 10**6\n        ngroups = 10**3\n        df = DataFrame(\n            {\"key\": np.random.randint(0, ngroups, size=N), \"data\": np.random.randn(N)}\n        )\n    \n        @test_parallel(num_threads=threads)\n        def parallel():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.parallel = parallel\n    \n        def loop():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.loop = loop",
         "min_run_count": 2,
         "name": "gil.ParallelGroupbyMethods.time_loop",
         "number": 0,
@@ -6307,11 +6307,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "b783562619f5b4ed2e6ed687e18b142454f4f3faffe5ecdba45b656f777e5db3",
+        "version": "eb7b8df45f4491f84224614922e1b5e9a4f93453147833890ec096562f96b248",
         "warmup_time": -1
     },
     "gil.ParallelGroupbyMethods.time_parallel": {
-        "code": "class ParallelGroupbyMethods:\n    def time_parallel(self, threads, method):\n        self.parallel()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelGroupbyMethods:\n    def setup(self, threads, method):\n        N = 10**6\n        ngroups = 10**3\n        df = DataFrame(\n            {\"key\": np.random.randint(0, ngroups, size=N), \"data\": np.random.randn(N)}\n        )\n    \n        @run_parallel(num_threads=threads)\n        def parallel():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.parallel = parallel\n    \n        def loop():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.loop = loop",
+        "code": "class ParallelGroupbyMethods:\n    def time_parallel(self, threads, method):\n        self.parallel()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelGroupbyMethods:\n    def setup(self, threads, method):\n        N = 10**6\n        ngroups = 10**3\n        df = DataFrame(\n            {\"key\": np.random.randint(0, ngroups, size=N), \"data\": np.random.randn(N)}\n        )\n    \n        @test_parallel(num_threads=threads)\n        def parallel():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.parallel = parallel\n    \n        def loop():\n            getattr(df.groupby(\"key\")[\"data\"], method)()\n    \n        self.loop = loop",
         "min_run_count": 2,
         "name": "gil.ParallelGroupbyMethods.time_parallel",
         "number": 0,
@@ -6341,11 +6341,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "58b8f0676bf881f75c56ab8d60db237f24e51de89cdf8717e545f21c5566fbe6",
+        "version": "ee3c7c1d8ffe98d3bbc8c64cb4af33754566e6351c3bb50458012a695887b895",
         "warmup_time": -1
     },
     "gil.ParallelGroups.time_get_groups": {
-        "code": "class ParallelGroups:\n    def time_get_groups(self, threads):\n        self.get_groups()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelGroups:\n    def setup(self, threads):\n        size = 2**22\n        ngroups = 10**3\n        data = Series(np.random.randint(0, ngroups, size=size))\n    \n        @run_parallel(num_threads=threads)\n        def get_groups():\n            data.groupby(data).groups\n    \n        self.get_groups = get_groups",
+        "code": "class ParallelGroups:\n    def time_get_groups(self, threads):\n        self.get_groups()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelGroups:\n    def setup(self, threads):\n        size = 2**22\n        ngroups = 10**3\n        data = Series(np.random.randint(0, ngroups, size=size))\n    \n        @test_parallel(num_threads=threads)\n        def get_groups():\n            data.groupby(data).groups\n    \n        self.get_groups = get_groups",
         "min_run_count": 2,
         "name": "gil.ParallelGroups.time_get_groups",
         "number": 0,
@@ -6364,11 +6364,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "2ec26da33f1b3aeaa3f9ae86372ff4cbffa503b66c62a2f34f802e64a044271b",
+        "version": "171c8e07e2d81baa3dde5f287fa352a1692571b4e8ab6bc86a6f308969c770f0",
         "warmup_time": -1
     },
     "gil.ParallelKth.time_kth_smallest": {
-        "code": "class ParallelKth:\n    def time_kth_smallest(self):\n        self.parallel_kth_smallest()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelKth:\n    def setup(self):\n        N = 10**7\n        k = 5 * 10**5\n        kwargs_list = [{\"arr\": np.random.randn(N)}, {\"arr\": np.random.randn(N)}]\n    \n        @run_parallel(num_threads=2, kwargs_list=kwargs_list)\n        def parallel_kth_smallest(arr):\n            algos.kth_smallest(arr, k)\n    \n        self.parallel_kth_smallest = parallel_kth_smallest",
+        "code": "class ParallelKth:\n    def time_kth_smallest(self):\n        self.parallel_kth_smallest()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelKth:\n    def setup(self):\n        N = 10**7\n        k = 5 * 10**5\n        kwargs_list = [{\"arr\": np.random.randn(N)}, {\"arr\": np.random.randn(N)}]\n    \n        @test_parallel(num_threads=2, kwargs_list=kwargs_list)\n        def parallel_kth_smallest(arr):\n            algos.kth_smallest(arr, k)\n    \n        self.parallel_kth_smallest = parallel_kth_smallest",
         "min_run_count": 2,
         "name": "gil.ParallelKth.time_kth_smallest",
         "number": 1,
@@ -6379,11 +6379,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "1f7a931e559937945639cdcb5aeaea88c8f82bf27f42d7f76631962abc366e9a",
+        "version": "728baeaaeac8eda248c8708b2a4bc45d00a0df43c2103cac65cbfc9c8aff7dcd",
         "warmup_time": -1
     },
     "gil.ParallelReadCSV.time_read_csv": {
-        "code": "class ParallelReadCSV:\n    def time_read_csv(self, dtype):\n        self.parallel_read_csv()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelReadCSV:\n    def setup(self, dtype):\n        rows = 10000\n        cols = 50\n        if dtype == \"float\":\n            df = DataFrame(np.random.randn(rows, cols))\n        elif dtype == \"datetime\":\n            df = DataFrame(\n                np.random.randn(rows, cols), index=date_range(\"1/1/2000\", periods=rows)\n            )\n        elif dtype == \"object\":\n            df = DataFrame(\n                \"foo\", index=range(rows), columns=[\"object%03d\" for _ in range(5)]\n            )\n        else:\n            raise NotImplementedError\n    \n        self.fname = f\"__test_{dtype}__.csv\"\n        df.to_csv(self.fname)\n    \n        @run_parallel(num_threads=2)\n        def parallel_read_csv():\n            read_csv(self.fname)\n    \n        self.parallel_read_csv = parallel_read_csv",
+        "code": "class ParallelReadCSV:\n    def time_read_csv(self, dtype):\n        self.parallel_read_csv()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelReadCSV:\n    def setup(self, dtype):\n        rows = 10000\n        cols = 50\n        if dtype == \"float\":\n            df = DataFrame(np.random.randn(rows, cols))\n        elif dtype == \"datetime\":\n            df = DataFrame(\n                np.random.randn(rows, cols), index=date_range(\"1/1/2000\", periods=rows)\n            )\n        elif dtype == \"object\":\n            df = DataFrame(\n                \"foo\", index=range(rows), columns=[\"object%03d\" for _ in range(5)]\n            )\n        else:\n            raise NotImplementedError\n    \n        self.fname = f\"__test_{dtype}__.csv\"\n        df.to_csv(self.fname)\n    \n        @test_parallel(num_threads=2)\n        def parallel_read_csv():\n            read_csv(self.fname)\n    \n        self.parallel_read_csv = parallel_read_csv",
         "min_run_count": 2,
         "name": "gil.ParallelReadCSV.time_read_csv",
         "number": 1,
@@ -6402,11 +6402,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "20a02700f045d58ececbe84ef3a1c92c1b9fcf6313b412327d370af65859fe1e",
+        "version": "8228e9d157c6aea95c1ffcdea89ba3331e5dec17b88134f572f22bbf274ea99c",
         "warmup_time": -1
     },
     "gil.ParallelRolling.time_rolling": {
-        "code": "class ParallelRolling:\n    def time_rolling(self, method):\n        self.parallel_rolling()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelRolling:\n    def setup(self, method):\n        win = 100\n        arr = np.random.rand(100000)\n        if hasattr(DataFrame, \"rolling\"):\n            df = DataFrame(arr).rolling(win)\n    \n            @run_parallel(num_threads=2)\n            def parallel_rolling():\n                getattr(df, method)()\n    \n            self.parallel_rolling = parallel_rolling\n        elif have_rolling_methods:\n            rolling = {\n                \"median\": rolling_median,\n                \"mean\": rolling_mean,\n                \"min\": rolling_min,\n                \"max\": rolling_max,\n                \"var\": rolling_var,\n                \"skew\": rolling_skew,\n                \"kurt\": rolling_kurt,\n                \"std\": rolling_std,\n            }\n    \n            @run_parallel(num_threads=2)\n            def parallel_rolling():\n                rolling[method](arr, win)\n    \n            self.parallel_rolling = parallel_rolling\n        else:\n            raise NotImplementedError",
+        "code": "class ParallelRolling:\n    def time_rolling(self, method):\n        self.parallel_rolling()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelRolling:\n    def setup(self, method):\n        win = 100\n        arr = np.random.rand(100000)\n        if hasattr(DataFrame, \"rolling\"):\n            df = DataFrame(arr).rolling(win)\n    \n            @test_parallel(num_threads=2)\n            def parallel_rolling():\n                getattr(df, method)()\n    \n            self.parallel_rolling = parallel_rolling\n        elif have_rolling_methods:\n            rolling = {\n                \"median\": rolling_median,\n                \"mean\": rolling_mean,\n                \"min\": rolling_min,\n                \"max\": rolling_max,\n                \"var\": rolling_var,\n                \"skew\": rolling_skew,\n                \"kurt\": rolling_kurt,\n                \"std\": rolling_std,\n            }\n    \n            @test_parallel(num_threads=2)\n            def parallel_rolling():\n                rolling[method](arr, win)\n    \n            self.parallel_rolling = parallel_rolling\n        else:\n            raise NotImplementedError",
         "min_run_count": 2,
         "name": "gil.ParallelRolling.time_rolling",
         "number": 0,
@@ -6430,11 +6430,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "853b5c3c60f7ca5baccd4795f9d29a908f660882be95a57edc2c6794d0958972",
+        "version": "982eb24280f1da753438825641a9861564da7d7a000c415ab86a6bc7522c160b",
         "warmup_time": -1
     },
     "gil.ParallelTake1D.time_take1d": {
-        "code": "class ParallelTake1D:\n    def time_take1d(self, dtype):\n        self.parallel_take1d()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelTake1D:\n    def setup(self, dtype):\n        N = 10**6\n        df = DataFrame({\"col\": np.arange(N, dtype=dtype)})\n        indexer = np.arange(100, len(df) - 100)\n    \n        @run_parallel(num_threads=2)\n        def parallel_take1d():\n            take_nd(df[\"col\"].values, indexer)\n    \n        self.parallel_take1d = parallel_take1d",
+        "code": "class ParallelTake1D:\n    def time_take1d(self, dtype):\n        self.parallel_take1d()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ParallelTake1D:\n    def setup(self, dtype):\n        N = 10**6\n        df = DataFrame({\"col\": np.arange(N, dtype=dtype)})\n        indexer = np.arange(100, len(df) - 100)\n    \n        @test_parallel(num_threads=2)\n        def parallel_take1d():\n            take_nd(df[\"col\"].values, indexer)\n    \n        self.parallel_take1d = parallel_take1d",
         "min_run_count": 2,
         "name": "gil.ParallelTake1D.time_take1d",
         "number": 0,
@@ -6452,7 +6452,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "8854b4da4315e9f63c3182ea12e18a0c5cade344218990f5659d165555526d95",
+        "version": "fd7379c21f5111cc9ec16f330e4ffc0e029ced1a7cd13e6b78511e7099f53926",
         "warmup_time": -1
     },
     "groupby.AggEngine.time_dataframe_cython": {

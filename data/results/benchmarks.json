@@ -21432,16 +21432,16 @@
         "warmup_time": -1
     },
     "strings.StringArrayConstruction.peakmem_stringarray_construction": {
-        "code": "class StringArrayConstruction:\n    def peakmem_stringarray_construction(self):\n        StringArray(self.series_arr, dtype=StringDtype())\n\n    def setup(self):\n        self.series_arr = np.array([str(i) * 10 for i in range(10**5)], dtype=object)\n        self.series_arr_nan = np.concatenate([self.series_arr, np.array([NA] * 1000)])",
+        "code": "class StringArrayConstruction:\n    def peakmem_stringarray_construction(self):\n        StringArray(self.series_arr)\n\n    def setup(self):\n        self.series_arr = np.array([str(i) * 10 for i in range(10**5)], dtype=object)\n        self.series_arr_nan = np.concatenate([self.series_arr, np.array([NA] * 1000)])",
         "name": "strings.StringArrayConstruction.peakmem_stringarray_construction",
         "param_names": [],
         "params": [],
         "type": "peakmemory",
         "unit": "bytes",
-        "version": "dfa2e2a6a92fddc17a50f100d52582ba52a684bca62c188a2904f554897f12a0"
+        "version": "1644a62bd4fef4c7214ab6a613fb523651eb795bdc0eca8bafc1bceb6af4bc8d"
     },
     "strings.StringArrayConstruction.time_string_array_construction": {
-        "code": "class StringArrayConstruction:\n    def time_string_array_construction(self):\n        StringArray(self.series_arr, dtype=StringDtype())\n\n    def setup(self):\n        self.series_arr = np.array([str(i) * 10 for i in range(10**5)], dtype=object)\n        self.series_arr_nan = np.concatenate([self.series_arr, np.array([NA] * 1000)])",
+        "code": "class StringArrayConstruction:\n    def time_string_array_construction(self):\n        StringArray(self.series_arr)\n\n    def setup(self):\n        self.series_arr = np.array([str(i) * 10 for i in range(10**5)], dtype=object)\n        self.series_arr_nan = np.concatenate([self.series_arr, np.array([NA] * 1000)])",
         "min_run_count": 2,
         "name": "strings.StringArrayConstruction.time_string_array_construction",
         "number": 0,
@@ -21452,11 +21452,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "250e82aaf2c8e9bba5fd9888b1be276f8a8ee84427a7630fff8dc607bdee8e91",
+        "version": "4ded60d6eacf6b7203c61d538380497e0dd86ed15910c739819f0c18299357a4",
         "warmup_time": -1
     },
     "strings.StringArrayConstruction.time_string_array_with_nan_construction": {
-        "code": "class StringArrayConstruction:\n    def time_string_array_with_nan_construction(self):\n        StringArray(self.series_arr_nan, dtype=StringDtype())\n\n    def setup(self):\n        self.series_arr = np.array([str(i) * 10 for i in range(10**5)], dtype=object)\n        self.series_arr_nan = np.concatenate([self.series_arr, np.array([NA] * 1000)])",
+        "code": "class StringArrayConstruction:\n    def time_string_array_with_nan_construction(self):\n        StringArray(self.series_arr_nan)\n\n    def setup(self):\n        self.series_arr = np.array([str(i) * 10 for i in range(10**5)], dtype=object)\n        self.series_arr_nan = np.concatenate([self.series_arr, np.array([NA] * 1000)])",
         "min_run_count": 2,
         "name": "strings.StringArrayConstruction.time_string_array_with_nan_construction",
         "number": 0,
@@ -21467,7 +21467,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "064c5e9ea4866be16bbfeb40e3407d4d86faba6e0599e4fa34d6aa37cf823ee3",
+        "version": "c7ef4a3758ceb79e8124d016a878c5be0d6bf37399e516da63b10e21cb3fc1d5",
         "warmup_time": -1
     },
     "timedelta.DatetimeAccessor.time_dt_accessor": {

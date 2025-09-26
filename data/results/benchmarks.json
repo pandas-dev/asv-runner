@@ -295,7 +295,7 @@
         "warmup_time": -1
     },
     "algorithms.SortIntegerArray.time_argsort": {
-        "code": "class SortIntegerArray:\n    def time_argsort(self, N):\n        self.array.argsort()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SortIntegerArray:\n    def setup(self, N):\n        data = np.arange(N, dtype=float)\n        data[40] = np.nan\n        self.array = pd.array(data, dtype=\"Int64\")",
+        "code": "class SortIntegerArray:\n    def time_argsort(self, N):\n        self.array.argsort()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SortIntegerArray:\n    def setup(self, N):\n        data = np.arange(N, dtype=float).astype(object)\n        data[40] = pd.NA\n        self.array = pd.array(data, dtype=\"Int64\")",
         "min_run_count": 2,
         "name": "algorithms.SortIntegerArray.time_argsort",
         "number": 0,
@@ -313,7 +313,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "712d4e0ba6b3b003618d30611818ce2c36c039fe0900eafca3896d3863ebbc51",
+        "version": "3bc40a833ab2b27401b13b8741c439359d9ce78d9ae9b2e108b190626e34d981",
         "warmup_time": -1
     },
     "algos.isin.IsIn.time_isin": {
@@ -4641,7 +4641,7 @@
         "warmup_time": -1
     },
     "frame_methods.Fillna.time_bfill": {
-        "code": "class Fillna:\n    def time_bfill(self, inplace, dtype):\n        self.df.bfill(inplace=inplace)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Fillna:\n    def setup(self, inplace, dtype):\n        N, M = 10000, 100\n        if dtype in (\"datetime64[ns]\", \"datetime64[ns, tz]\", \"timedelta64[ns]\"):\n            data = {\n                \"datetime64[ns]\": date_range(\"2011-01-01\", freq=\"h\", periods=N),\n                \"datetime64[ns, tz]\": date_range(\n                    \"2011-01-01\", freq=\"h\", periods=N, tz=\"Asia/Tokyo\"\n                ),\n                \"timedelta64[ns]\": timedelta_range(start=\"1 day\", periods=N, freq=\"1D\"),\n            }\n            self.df = DataFrame({f\"col_{i}\": data[dtype] for i in range(M)})\n            self.df[::2] = None\n        else:\n            values = np.random.randn(N, M)\n            values[::2] = np.nan\n            if dtype == \"Int64\":\n                values = values.round()\n            self.df = DataFrame(values, dtype=dtype)\n        self.fill_values = self.df.iloc[self.df.first_valid_index()].to_dict()",
+        "code": "class Fillna:\n    def time_bfill(self, inplace, dtype):\n        self.df.bfill(inplace=inplace)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Fillna:\n    def setup(self, inplace, dtype):\n        N, M = 10000, 100\n        if dtype in (\"datetime64[ns]\", \"datetime64[ns, tz]\", \"timedelta64[ns]\"):\n            data = {\n                \"datetime64[ns]\": date_range(\"2011-01-01\", freq=\"h\", periods=N),\n                \"datetime64[ns, tz]\": date_range(\n                    \"2011-01-01\", freq=\"h\", periods=N, tz=\"Asia/Tokyo\"\n                ),\n                \"timedelta64[ns]\": timedelta_range(start=\"1 day\", periods=N, freq=\"1D\"),\n            }\n            self.df = DataFrame({f\"col_{i}\": data[dtype] for i in range(M)})\n            self.df[::2] = None\n        else:\n            values = np.random.randn(N, M)\n            values[::2] = np.nan\n            if dtype == \"Int64\":\n                values = values.round()\n                values = values.astype(object)\n                values[::2] = NA\n            self.df = DataFrame(values, dtype=dtype)\n        self.fill_values = self.df.iloc[self.df.first_valid_index()].to_dict()",
         "min_run_count": 2,
         "name": "frame_methods.Fillna.time_bfill",
         "number": 0,
@@ -4670,11 +4670,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "ab1619ca6d7bbaad9c0eac1f7dd4ea723ac82673224aa8dbce70c1984f22acb3",
+        "version": "d1e4085ef5776f3a63a1fcc56b870d971e60ceea02f7fae4af193263baf2b6b1",
         "warmup_time": -1
     },
     "frame_methods.Fillna.time_ffill": {
-        "code": "class Fillna:\n    def time_ffill(self, inplace, dtype):\n        self.df.ffill(inplace=inplace)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Fillna:\n    def setup(self, inplace, dtype):\n        N, M = 10000, 100\n        if dtype in (\"datetime64[ns]\", \"datetime64[ns, tz]\", \"timedelta64[ns]\"):\n            data = {\n                \"datetime64[ns]\": date_range(\"2011-01-01\", freq=\"h\", periods=N),\n                \"datetime64[ns, tz]\": date_range(\n                    \"2011-01-01\", freq=\"h\", periods=N, tz=\"Asia/Tokyo\"\n                ),\n                \"timedelta64[ns]\": timedelta_range(start=\"1 day\", periods=N, freq=\"1D\"),\n            }\n            self.df = DataFrame({f\"col_{i}\": data[dtype] for i in range(M)})\n            self.df[::2] = None\n        else:\n            values = np.random.randn(N, M)\n            values[::2] = np.nan\n            if dtype == \"Int64\":\n                values = values.round()\n            self.df = DataFrame(values, dtype=dtype)\n        self.fill_values = self.df.iloc[self.df.first_valid_index()].to_dict()",
+        "code": "class Fillna:\n    def time_ffill(self, inplace, dtype):\n        self.df.ffill(inplace=inplace)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Fillna:\n    def setup(self, inplace, dtype):\n        N, M = 10000, 100\n        if dtype in (\"datetime64[ns]\", \"datetime64[ns, tz]\", \"timedelta64[ns]\"):\n            data = {\n                \"datetime64[ns]\": date_range(\"2011-01-01\", freq=\"h\", periods=N),\n                \"datetime64[ns, tz]\": date_range(\n                    \"2011-01-01\", freq=\"h\", periods=N, tz=\"Asia/Tokyo\"\n                ),\n                \"timedelta64[ns]\": timedelta_range(start=\"1 day\", periods=N, freq=\"1D\"),\n            }\n            self.df = DataFrame({f\"col_{i}\": data[dtype] for i in range(M)})\n            self.df[::2] = None\n        else:\n            values = np.random.randn(N, M)\n            values[::2] = np.nan\n            if dtype == \"Int64\":\n                values = values.round()\n                values = values.astype(object)\n                values[::2] = NA\n            self.df = DataFrame(values, dtype=dtype)\n        self.fill_values = self.df.iloc[self.df.first_valid_index()].to_dict()",
         "min_run_count": 2,
         "name": "frame_methods.Fillna.time_ffill",
         "number": 0,
@@ -4703,11 +4703,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "0912aa084abd2d5fc47d46ff25b6d897cec70cdab63de87d29937622654d060a",
+        "version": "b694e5da349dc30d07ad755a9cadbdd264327782359932907f34b4eeb82752d3",
         "warmup_time": -1
     },
     "frame_methods.Fillna.time_fillna": {
-        "code": "class Fillna:\n    def time_fillna(self, inplace, dtype):\n        self.df.fillna(value=self.fill_values, inplace=inplace)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Fillna:\n    def setup(self, inplace, dtype):\n        N, M = 10000, 100\n        if dtype in (\"datetime64[ns]\", \"datetime64[ns, tz]\", \"timedelta64[ns]\"):\n            data = {\n                \"datetime64[ns]\": date_range(\"2011-01-01\", freq=\"h\", periods=N),\n                \"datetime64[ns, tz]\": date_range(\n                    \"2011-01-01\", freq=\"h\", periods=N, tz=\"Asia/Tokyo\"\n                ),\n                \"timedelta64[ns]\": timedelta_range(start=\"1 day\", periods=N, freq=\"1D\"),\n            }\n            self.df = DataFrame({f\"col_{i}\": data[dtype] for i in range(M)})\n            self.df[::2] = None\n        else:\n            values = np.random.randn(N, M)\n            values[::2] = np.nan\n            if dtype == \"Int64\":\n                values = values.round()\n            self.df = DataFrame(values, dtype=dtype)\n        self.fill_values = self.df.iloc[self.df.first_valid_index()].to_dict()",
+        "code": "class Fillna:\n    def time_fillna(self, inplace, dtype):\n        self.df.fillna(value=self.fill_values, inplace=inplace)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Fillna:\n    def setup(self, inplace, dtype):\n        N, M = 10000, 100\n        if dtype in (\"datetime64[ns]\", \"datetime64[ns, tz]\", \"timedelta64[ns]\"):\n            data = {\n                \"datetime64[ns]\": date_range(\"2011-01-01\", freq=\"h\", periods=N),\n                \"datetime64[ns, tz]\": date_range(\n                    \"2011-01-01\", freq=\"h\", periods=N, tz=\"Asia/Tokyo\"\n                ),\n                \"timedelta64[ns]\": timedelta_range(start=\"1 day\", periods=N, freq=\"1D\"),\n            }\n            self.df = DataFrame({f\"col_{i}\": data[dtype] for i in range(M)})\n            self.df[::2] = None\n        else:\n            values = np.random.randn(N, M)\n            values[::2] = np.nan\n            if dtype == \"Int64\":\n                values = values.round()\n                values = values.astype(object)\n                values[::2] = NA\n            self.df = DataFrame(values, dtype=dtype)\n        self.fill_values = self.df.iloc[self.df.first_valid_index()].to_dict()",
         "min_run_count": 2,
         "name": "frame_methods.Fillna.time_fillna",
         "number": 0,
@@ -4736,7 +4736,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "ba97c9ea4cd6a522136714fca9cc26d5060c052e08f8ff392def7c3b1ce4578e",
+        "version": "34570e97cf423f28b703a8af17d48d15a4b0c35d9cbab65e1f23a349b836043d",
         "warmup_time": -1
     },
     "frame_methods.FindValidIndex.time_first_valid_index": {
@@ -6890,7 +6890,7 @@
         "warmup_time": -1
     },
     "groupby.Cumulative.time_frame_transform": {
-        "code": "class Cumulative:\n    def time_frame_transform(self, dtype, method, with_nans):\n        self.df.groupby(\"key\").transform(method)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Cumulative:\n    def setup(self, dtype, method, with_nans):\n        if with_nans and dtype == \"int64\":\n            raise NotImplementedError(\"Construction of df would raise\")\n    \n        N = 500_000\n        keys = np.random.randint(0, 100, size=N)\n        vals = np.random.randint(-10, 10, (N, 5))\n    \n        if with_nans:\n            null_vals = vals.astype(float, copy=True)\n            null_vals[::2, :] = np.nan\n            null_vals[::3, :] = np.nan\n            df = DataFrame(null_vals, columns=list(\"abcde\"), dtype=dtype)\n            df[\"key\"] = keys\n            self.df = df\n        else:\n            df = DataFrame(vals, columns=list(\"abcde\")).astype(dtype, copy=False)\n            df[\"key\"] = keys\n            self.df = df",
+        "code": "class Cumulative:\n    def time_frame_transform(self, dtype, method, with_nans):\n        self.df.groupby(\"key\").transform(method)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Cumulative:\n    def setup(self, dtype, method, with_nans):\n        if with_nans and dtype == \"int64\":\n            raise NotImplementedError(\"Construction of df would raise\")\n    \n        N = 500_000\n        keys = np.random.randint(0, 100, size=N)\n        vals = np.random.randint(-10, 10, (N, 5))\n    \n        if with_nans:\n            null_vals = vals.astype(float, copy=True)\n            null_vals[::2, :] = np.nan\n            null_vals[::3, :] = np.nan\n            if dtype in [\"Int64\", \"Float64\"]:\n                null_vals = null_vals.astype(object)\n                null_vals[::2, :] = NA\n                null_vals[::3, :] = NA\n            df = DataFrame(null_vals, columns=list(\"abcde\"), dtype=dtype)\n            df[\"key\"] = keys\n            self.df = df\n        else:\n            df = DataFrame(vals, columns=list(\"abcde\")).astype(dtype, copy=False)\n            df[\"key\"] = keys\n            self.df = df",
         "min_run_count": 2,
         "name": "groupby.Cumulative.time_frame_transform",
         "number": 0,
@@ -6921,7 +6921,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "508bbc112e0877babc3aaf14b674b720e942cd27f59280bc4678e5cca617dd6d",
+        "version": "7d731358e3604a6347e8fe9e3efe2fe6688fbe197df6a94ca205ee7c0307f0a4",
         "warmup_time": -1
     },
     "groupby.DateAttributes.time_len_groupby_object": {

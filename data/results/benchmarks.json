@@ -18681,7 +18681,7 @@
         "warmup_time": -1
     },
     "series_methods.Replace.peakmem_replace_dict": {
-        "code": "class Replace:\n    def peakmem_replace_dict(self, num_to_replace):\n        self.ser.replace(self.replace_dict)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(zip(self.to_replace_list, self.values_list))",
+        "code": "class Replace:\n    def peakmem_replace_dict(self, num_to_replace):\n        self.ser.replace(self.replace_dict)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(\n            zip(self.to_replace_list, self.values_list, strict=True)\n        )",
         "name": "series_methods.Replace.peakmem_replace_dict",
         "param_names": [
             "num_to_replace"
@@ -18694,10 +18694,10 @@
         ],
         "type": "peakmemory",
         "unit": "bytes",
-        "version": "82dfd71ffd244c5b1205af03154e4e4547227fe2551d07660db4b7656efdac03"
+        "version": "dbab1f031deefa71609bff80352d729321ddfac6591edc5074014a181d8742bc"
     },
     "series_methods.Replace.peakmem_replace_list": {
-        "code": "class Replace:\n    def peakmem_replace_list(self, num_to_replace):\n        self.ser.replace(self.to_replace_list, self.values_list)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(zip(self.to_replace_list, self.values_list))",
+        "code": "class Replace:\n    def peakmem_replace_list(self, num_to_replace):\n        self.ser.replace(self.to_replace_list, self.values_list)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(\n            zip(self.to_replace_list, self.values_list, strict=True)\n        )",
         "name": "series_methods.Replace.peakmem_replace_list",
         "param_names": [
             "num_to_replace"
@@ -18710,10 +18710,10 @@
         ],
         "type": "peakmemory",
         "unit": "bytes",
-        "version": "11d050f21303f90f57bfaf0eef0535a9459a8ef82e29053f7e1a7090ef4b226c"
+        "version": "b77966745d4d8bdf6d3c994ad277599e89cfd8e9eb257647cf892f62ad7fa3ea"
     },
     "series_methods.Replace.time_replace_dict": {
-        "code": "class Replace:\n    def time_replace_dict(self, num_to_replace):\n        self.ser.replace(self.replace_dict)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(zip(self.to_replace_list, self.values_list))",
+        "code": "class Replace:\n    def time_replace_dict(self, num_to_replace):\n        self.ser.replace(self.replace_dict)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(\n            zip(self.to_replace_list, self.values_list, strict=True)\n        )",
         "min_run_count": 2,
         "name": "series_methods.Replace.time_replace_dict",
         "number": 0,
@@ -18731,11 +18731,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "61cb7f463d734dcaf1edbd292af75ede0994c5b2aed3311d7807aac689771d2d",
+        "version": "5b7a15a21440fb08a7e367496ffa91663f5e9e4e4002c1e8e433f38b15800943",
         "warmup_time": -1
     },
     "series_methods.Replace.time_replace_list": {
-        "code": "class Replace:\n    def time_replace_list(self, num_to_replace):\n        self.ser.replace(self.to_replace_list, self.values_list)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(zip(self.to_replace_list, self.values_list))",
+        "code": "class Replace:\n    def time_replace_list(self, num_to_replace):\n        self.ser.replace(self.to_replace_list, self.values_list)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Replace:\n    def setup(self, num_to_replace):\n        N = 1_000_000\n        self.arr = np.random.randn(N)\n        self.arr1 = self.arr.copy()\n        np.random.shuffle(self.arr1)\n        self.ser = Series(self.arr)\n    \n        self.to_replace_list = np.random.choice(self.arr, num_to_replace)\n        self.values_list = np.random.choice(self.arr1, num_to_replace)\n    \n        self.replace_dict = dict(\n            zip(self.to_replace_list, self.values_list, strict=True)\n        )",
         "min_run_count": 2,
         "name": "series_methods.Replace.time_replace_list",
         "number": 0,
@@ -18753,7 +18753,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "bb772d4b5c8a9a6917a2f3b97f69478c55a246981d6e2350802c926011741b0a",
+        "version": "3fe19730b2cfdf6bd3694952014fd6544e74c438cb58c9c57ffd4a8d95b49909",
         "warmup_time": -1
     },
     "series_methods.SearchSorted.time_searchsorted": {
@@ -18789,7 +18789,7 @@
         "warmup_time": -1
     },
     "series_methods.SeriesConstructor.time_constructor_dict": {
-        "code": "class SeriesConstructor:\n    def time_constructor_dict(self):\n        Series(data=self.data, index=self.idx)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SeriesConstructor:\n    def setup(self):\n        self.idx = date_range(\n            start=datetime(2015, 10, 26), end=datetime(2016, 1, 1), freq=\"50s\"\n        )\n        self.data = dict(zip(self.idx, range(len(self.idx))))\n        self.array = np.array([1, 2, 3])\n        self.idx2 = Index([\"a\", \"b\", \"c\"])",
+        "code": "class SeriesConstructor:\n    def time_constructor_dict(self):\n        Series(data=self.data, index=self.idx)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SeriesConstructor:\n    def setup(self):\n        self.idx = date_range(\n            start=datetime(2015, 10, 26), end=datetime(2016, 1, 1), freq=\"50s\"\n        )\n        self.data = dict(zip(self.idx, range(len(self.idx)), strict=True))\n        self.array = np.array([1, 2, 3])\n        self.idx2 = Index([\"a\", \"b\", \"c\"])",
         "min_run_count": 2,
         "name": "series_methods.SeriesConstructor.time_constructor_dict",
         "number": 0,
@@ -18800,11 +18800,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "e71f5d93471f71f757d994db2550ae233bb7f18e13e21aca22dafa53f833fb4e",
+        "version": "12a01be1cf29da8155d680a905719fb3eadb48a1ae446fa9ac4be3773b6e43bd",
         "warmup_time": -1
     },
     "series_methods.SeriesConstructor.time_constructor_no_data": {
-        "code": "class SeriesConstructor:\n    def time_constructor_no_data(self):\n        Series(data=None, index=self.idx)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SeriesConstructor:\n    def setup(self):\n        self.idx = date_range(\n            start=datetime(2015, 10, 26), end=datetime(2016, 1, 1), freq=\"50s\"\n        )\n        self.data = dict(zip(self.idx, range(len(self.idx))))\n        self.array = np.array([1, 2, 3])\n        self.idx2 = Index([\"a\", \"b\", \"c\"])",
+        "code": "class SeriesConstructor:\n    def time_constructor_no_data(self):\n        Series(data=None, index=self.idx)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SeriesConstructor:\n    def setup(self):\n        self.idx = date_range(\n            start=datetime(2015, 10, 26), end=datetime(2016, 1, 1), freq=\"50s\"\n        )\n        self.data = dict(zip(self.idx, range(len(self.idx)), strict=True))\n        self.array = np.array([1, 2, 3])\n        self.idx2 = Index([\"a\", \"b\", \"c\"])",
         "min_run_count": 2,
         "name": "series_methods.SeriesConstructor.time_constructor_no_data",
         "number": 0,
@@ -18815,7 +18815,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "c55e26955fd47febad07ecd223347b24a08ae3454ba16023ad6bb73ec4aaf43a",
+        "version": "47ac9bb329a99642cbe1bda57d87cb18156719594350f29eab9260c863595347",
         "warmup_time": -1
     },
     "series_methods.SeriesGetattr.time_series_datetimeindex_repr": {

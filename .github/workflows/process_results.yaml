@@ -63,12 +63,12 @@ jobs:
 
       - name: Process ASV results
         run: |
-          python ci/process_results.py --input-path=asv_bench/ --output-path=asv-runner/data
+          python asv-runner/ci/process_results.py --input-path=asv_bench/ --output-path=asv-runner/data
           rm -rf asv-runner/docs
           mv asv_bench/html/ asv-runner/docs
 
       - name: Make issues for new regressions
-        run: python ci/make_issues.py --input-path=asv-runner/data
+        run: python asv-runner/ci/make_issues.py --input-path=asv-runner/data
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

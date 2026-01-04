@@ -99,7 +99,6 @@ def make_body(
 
 
 def make_envs_diff(*, input_path: Path, benchmarks: pd.DataFrame, sha: str) -> str:
-    sha = "07d299343601cd6692d7a6c5adc74b274fff260f"
     prev_sha = benchmarks["sha"][benchmarks["sha"].eq(sha).shift(-1)].iloc[0]
     curr_env = input_path / "envs" / f"{sha}.yml"
     prev_env = input_path / "envs" / f"{prev_sha}.yml"

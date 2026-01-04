@@ -98,6 +98,17 @@ def make_body(
     return body
 
 
+def make_envs_diff(*, input_path: Path, benchmarks: pd.DataFrame, sha: str) -> str:
+    sha = "07d299343601cd6692d7a6c5adc74b274fff260f"
+    prev_sha = benchmarks["sha"][benchmarks["sha"].eq(sha).shift(-1)].iloc[0]
+    curr_env = input_path / "envs" / f"{sha}.yml"
+    prev_env = input_path / "envs" / f"{prev_sha}.yml"
+    result = subprocess.run(
+        ["diff", prev_env, curr_env], capture_output=True, check=False
+    ).stdout.decode()
+    return result
+
+
 def run(input_path: str | Path):
     if not isinstance(input_path, Path):
         input_path = Path(input_path)
@@ -137,12 +148,29 @@ def run(input_path: str | Path):
                 sha=sha,
                 shorten=True,
             )
+        if len(body) >= GITHUB_ISSUE_LENGTH:
+            body = body[:GITHUB_ISSUE_LENGTH]
+            body += "\nWARNING: Body has been clipped due to length."
 
         cmd = (
             f"gh issue create"
             rf" --repo pandas-dev/asv-runner"
             rf' --title "{title}"'
             rf' --body "{body}"'
+        )
+        issue_url = execute(cmd)
+
+        issue_number = issue_url[issue_url.rfind("/") + 1 :]
+        envs_diff = make_envs_diff(
+            input_path=input_path, benchmarks=benchmarks, sha=sha
+        )
+        if len(envs_diff) >= GITHUB_ISSUE_LENGTH:
+            envs_diff = envs_diff[:GITHUB_ISSUE_LENGTH]
+            envs_diff += "\nWARNING: Body has been clipped due to length."
+        cmd = (
+            f"gh issue comment {issue_number}"
+            rf" --repo pandas-dev/asv-runner"
+            rf' --body "{envs_diff}"'
         )
         execute(cmd)
 

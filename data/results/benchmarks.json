@@ -2522,7 +2522,7 @@
         "warmup_time": -1
     },
     "categoricals.Constructor.time_all_nan": {
-        "code": "class Constructor:\n    def time_all_nan(self):\n        pd.Categorical(self.values_all_nan)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_all_nan(self):\n        pd.Categorical(self.values_all_nan)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_all_nan",
         "number": 0,
@@ -2533,11 +2533,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "fc34b2fc1aa3a8d989b3d4d4f43309050920b518ccb22742b8c9880fd2daeaa7",
+        "version": "a95a5f5a99f9d9a669dbb5768896da20b155df9a8a2ad6d2521585a881984f36",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_datetimes": {
-        "code": "class Constructor:\n    def time_datetimes(self):\n        pd.Categorical(self.datetimes)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_datetimes(self):\n        pd.Categorical(self.datetimes)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_datetimes",
         "number": 0,
@@ -2548,11 +2548,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "21491bf24e30bce0fd02220d64dbbcf27433999a19ebeb8a4c2ada9323fffcec",
+        "version": "6437e820158817dd427a42e2f0079c114030c4befd21e319daf14456a22c7657",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_datetimes_with_nat": {
-        "code": "class Constructor:\n    def time_datetimes_with_nat(self):\n        pd.Categorical(self.datetimes_with_nat)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_datetimes_with_nat(self):\n        pd.Categorical(self.datetimes_with_nat)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_datetimes_with_nat",
         "number": 0,
@@ -2563,11 +2563,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "fad1bc1045c1ecae82586b1bfc6206bd68dbf453b3c341f8b9626217a0dc98b6",
+        "version": "eee12aa61fbf4c341b347f6206d9e93f19f34919193cb388a44c98c37b838e37",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_existing_categorical": {
-        "code": "class Constructor:\n    def time_existing_categorical(self):\n        pd.Categorical(self.categorical)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_existing_categorical(self):\n        pd.Categorical(self.categorical)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_existing_categorical",
         "number": 0,
@@ -2578,11 +2578,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "9630a83b0e8907ccdd4ba4448efef4f94833f2b6c0de71b2b6c499f816eb2f9a",
+        "version": "b96a19c8cfa9b554871923da067e4d37569a4a96c19adc3c9baec4f82d6c7182",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_existing_series": {
-        "code": "class Constructor:\n    def time_existing_series(self):\n        pd.Categorical(self.series)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_existing_series(self):\n        pd.Categorical(self.series)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_existing_series",
         "number": 0,
@@ -2593,11 +2593,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "e8f7fc0eafb5c42ec91db342f88e7ff30be72baf37daaeb01219128d72e36762",
+        "version": "465a3684a55698e14b5352ed1b9a6b90b2680947eaf99853c035fb129956e515",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_fastpath": {
-        "code": "class Constructor:\n    def time_fastpath(self):\n        dtype = pd.CategoricalDtype(categories=self.cat_idx)\n        pd.Categorical._simple_new(self.codes, dtype)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_fastpath(self):\n        dtype = pd.CategoricalDtype(categories=self.cat_idx)\n        pd.Categorical._simple_new(self.codes, dtype)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_fastpath",
         "number": 0,
@@ -2608,11 +2608,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "a49c74359c6fac84f510b14b52c3b65bf4607a99672b5008c8e90d02ed151535",
+        "version": "ac8a82a07620fee3bb1edaabbc2ca5d7eb6012b4fb6f5cd0d9d614df3f23fe83",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_from_codes_all_int8": {
-        "code": "class Constructor:\n    def time_from_codes_all_int8(self):\n        pd.Categorical.from_codes(self.values_all_int8, self.categories)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_from_codes_all_int8(self):\n        pd.Categorical.from_codes(self.values_all_int8, self.categories)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_from_codes_all_int8",
         "number": 0,
@@ -2623,11 +2623,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "7169835f266c2b716c0c53e03822c6b61e9364df39defea9a72e65866e9e799e",
+        "version": "fec28805a3b2a632885a9c48f7e51dc4cca1a8a8b29d907c8fd37e7b4e3def20",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_interval": {
-        "code": "class Constructor:\n    def time_interval(self):\n        pd.Categorical(self.datetimes, categories=self.datetimes)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_interval(self):\n        pd.Categorical(self.datetimes, categories=self.datetimes)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_interval",
         "number": 0,
@@ -2638,11 +2638,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "a7acd5b43515c344aee35540db9d9e9ec60826748cc1ba87b0c033825ec7f8c3",
+        "version": "8851f9f05de02836e43827f286dfac11ba2295d242d507c2d33f4bc297961b54",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_regular": {
-        "code": "class Constructor:\n    def time_regular(self):\n        pd.Categorical(self.values, self.categories)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_regular(self):\n        pd.Categorical(self.values, self.categories)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_regular",
         "number": 0,
@@ -2653,11 +2653,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "c754dc01772b33919c14f0db934ba900c9aae6bf7c650f0d3556c912c7a6a080",
+        "version": "d3652397d7ced714a49179f0d73d44e0a71b58fea5be2e74615b23d1f7e569da",
         "warmup_time": -1
     },
     "categoricals.Constructor.time_with_nan": {
-        "code": "class Constructor:\n    def time_with_nan(self):\n        pd.Categorical(self.values_some_nan)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile(self.categories + [np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
+        "code": "class Constructor:\n    def time_with_nan(self):\n        pd.Categorical(self.values_some_nan)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Constructor:\n    def setup(self):\n        N = 10**5\n        self.categories = list(\"abcde\")\n        self.cat_idx = pd.Index(self.categories)\n        self.values = np.tile(self.categories, N)\n        self.codes = np.tile(range(len(self.categories)), N)\n    \n        self.datetimes = pd.Series(\n            pd.date_range(\"1995-01-01 00:00:00\", periods=N // 10, freq=\"s\")\n        )\n        self.datetimes_with_nat = self.datetimes.copy()\n        self.datetimes_with_nat.iloc[-1] = pd.NaT\n    \n        self.values_some_nan = list(np.tile([*self.categories, np.nan], N))\n        self.values_all_nan = [np.nan] * len(self.values)\n        self.values_all_int8 = np.ones(N, \"int8\")\n        self.categorical = pd.Categorical(self.values, self.categories)\n        self.series = pd.Series(self.categorical)\n        self.intervals = pd.interval_range(0, 1, periods=N // 10)",
         "min_run_count": 2,
         "name": "categoricals.Constructor.time_with_nan",
         "number": 0,
@@ -2668,7 +2668,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "da4358563a341dff6688a7cd1f87a7ce42556de3a84132ec7d02247774bc922a",
+        "version": "5e1ac15c60a82fe9a8c9b146f51aee1ff4a4b5ce7f8e93c14671809a12ec2796",
         "warmup_time": -1
     },
     "categoricals.Contains.time_categorical_contains": {
@@ -8218,7 +8218,7 @@
         "warmup_time": -1
     },
     "hash_functions.NumericSeriesIndexing.time_loc_slice": {
-        "code": "class NumericSeriesIndexing:\n    def time_loc_slice(self, index, N):\n        # trigger building of mapping\n        self.data.loc[:800]\n\n    def setup(self, dtype, N):\n        vals = np.array(list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype)\n        indices = pd.Index(vals)\n        self.data = pd.Series(np.arange(N), index=indices)",
+        "code": "class NumericSeriesIndexing:\n    def time_loc_slice(self, index, N):\n        # trigger building of mapping\n        self.data.loc[:800]\n\n    def setup(self, dtype, N):\n        vals = np.array([*range(55), 54, *range(55, N - 1)], dtype=dtype)\n        indices = pd.Index(vals)\n        self.data = pd.Series(np.arange(N), index=indices)",
         "min_run_count": 2,
         "name": "hash_functions.NumericSeriesIndexing.time_loc_slice",
         "number": 0,
@@ -8245,11 +8245,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "bbd9b15d7f65d1d2a57335626da432a02c7db5e70cbd8098c13b4e3d4b391802",
+        "version": "46c115be796ef3118ce20f77a6e986335d94ef14af00d89cc0d7427691b02874",
         "warmup_time": -1
     },
     "hash_functions.NumericSeriesIndexingShuffled.time_loc_slice": {
-        "code": "class NumericSeriesIndexingShuffled:\n    def time_loc_slice(self, index, N):\n        # trigger building of mapping\n        self.data.loc[:800]\n\n    def setup(self, dtype, N):\n        vals = np.array(list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype)\n        np.random.shuffle(vals)\n        indices = pd.Index(vals)\n        self.data = pd.Series(np.arange(N), index=indices)",
+        "code": "class NumericSeriesIndexingShuffled:\n    def time_loc_slice(self, index, N):\n        # trigger building of mapping\n        self.data.loc[:800]\n\n    def setup(self, dtype, N):\n        vals = np.array([*range(55), 54, *range(55, N - 1)], dtype=dtype)\n        np.random.shuffle(vals)\n        indices = pd.Index(vals)\n        self.data = pd.Series(np.arange(N), index=indices)",
         "min_run_count": 2,
         "name": "hash_functions.NumericSeriesIndexingShuffled.time_loc_slice",
         "number": 0,
@@ -8276,11 +8276,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "432c7f2c138c103e14be8ce799b1975974eeda009197320865b48b0310220376",
+        "version": "6c593cf98840087eb923ef805f0f9da009407012833eff1c547556c75bcaed57",
         "warmup_time": -1
     },
     "hash_functions.Unique.time_unique": {
-        "code": "class Unique:\n    def time_unique(self, exponent):\n        pd.unique(self.ser_unique)\n\n    def setup(self, dtype):\n        self.ser = pd.Series(([1, pd.NA, 2] + list(range(100_000))) * 3, dtype=dtype)\n        self.ser_unique = pd.Series(list(range(300_000)) + [pd.NA], dtype=dtype)",
+        "code": "class Unique:\n    def time_unique(self, exponent):\n        pd.unique(self.ser_unique)\n\n    def setup(self, dtype):\n        self.ser = pd.Series(([1, pd.NA, 2, *range(100000)]) * 3, dtype=dtype)\n        self.ser_unique = pd.Series([*range(300000), pd.NA], dtype=dtype)",
         "min_run_count": 2,
         "name": "hash_functions.Unique.time_unique",
         "number": 0,
@@ -8298,11 +8298,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "b4e9501a2d788652cf742d899e45ee6697865981d8caebbc02b5c662b0207edf",
+        "version": "8f7095adc42db60a4c18d3e3267a9b60e0a3da0edf5de9172417452df58a6ddd",
         "warmup_time": -1
     },
     "hash_functions.Unique.time_unique_with_duplicates": {
-        "code": "class Unique:\n    def time_unique_with_duplicates(self, exponent):\n        pd.unique(self.ser)\n\n    def setup(self, dtype):\n        self.ser = pd.Series(([1, pd.NA, 2] + list(range(100_000))) * 3, dtype=dtype)\n        self.ser_unique = pd.Series(list(range(300_000)) + [pd.NA], dtype=dtype)",
+        "code": "class Unique:\n    def time_unique_with_duplicates(self, exponent):\n        pd.unique(self.ser)\n\n    def setup(self, dtype):\n        self.ser = pd.Series(([1, pd.NA, 2, *range(100000)]) * 3, dtype=dtype)\n        self.ser_unique = pd.Series([*range(300000), pd.NA], dtype=dtype)",
         "min_run_count": 2,
         "name": "hash_functions.Unique.time_unique_with_duplicates",
         "number": 0,
@@ -8320,7 +8320,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "167e56c7e4063b7bb8cad24ce741ad07d7714185a453ada8f9296eb9acf885af",
+        "version": "9dab34c94a7be0965f5c086e2b58b8605de8118917ca9ef5494119c436730bfb",
         "warmup_time": -1
     },
     "hash_functions.UniqueAndFactorizeArange.time_factorize": {
@@ -9459,7 +9459,7 @@
         "warmup_time": -1
     },
     "indexing.DataFrameNumericIndexing.time_bool_indexer": {
-        "code": "class DataFrameNumericIndexing:\n    def time_bool_indexer(self, index, index_structure):\n        self.df[self.bool_indexer]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
+        "code": "class DataFrameNumericIndexing:\n    def time_bool_indexer(self, index, index_structure):\n        self.df[self.bool_indexer]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
         "min_run_count": 2,
         "name": "indexing.DataFrameNumericIndexing.time_bool_indexer",
         "number": 0,
@@ -9483,11 +9483,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "5b49ac8c1fc01d2dc2c19c3edcf588116fa02ee673f47dde99584eb435361fed",
+        "version": "70f8b162a31668271b91ecac8ffb9be40d7273074d40e2038c1a627ea6df26f2",
         "warmup_time": -1
     },
     "indexing.DataFrameNumericIndexing.time_iloc": {
-        "code": "class DataFrameNumericIndexing:\n    def time_iloc(self, index, index_structure):\n        self.df.iloc[:100, 0]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
+        "code": "class DataFrameNumericIndexing:\n    def time_iloc(self, index, index_structure):\n        self.df.iloc[:100, 0]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
         "min_run_count": 2,
         "name": "indexing.DataFrameNumericIndexing.time_iloc",
         "number": 0,
@@ -9511,11 +9511,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "d4f1ee902bd3f0617b7fe7bfbca605d0c34d424476e2ea162e220ee701e530eb",
+        "version": "1d0efabe899632657d9631df3fd3c7758ed8f7303bded279edb31826fd59740d",
         "warmup_time": -1
     },
     "indexing.DataFrameNumericIndexing.time_iloc_dups": {
-        "code": "class DataFrameNumericIndexing:\n    def time_iloc_dups(self, index, index_structure):\n        self.df_dup.iloc[self.idx_dupe]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
+        "code": "class DataFrameNumericIndexing:\n    def time_iloc_dups(self, index, index_structure):\n        self.df_dup.iloc[self.idx_dupe]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
         "min_run_count": 2,
         "name": "indexing.DataFrameNumericIndexing.time_iloc_dups",
         "number": 0,
@@ -9539,11 +9539,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "4390803cba45b26841ac1b3f27cffcaed921e6083822e3d13e9eff994ee542e5",
+        "version": "b60f1835d7d38ea52ffac9eb738302f0b9b0c8b74274264a5d402ba5baef67c5",
         "warmup_time": -1
     },
     "indexing.DataFrameNumericIndexing.time_loc": {
-        "code": "class DataFrameNumericIndexing:\n    def time_loc(self, index, index_structure):\n        self.df.loc[:100, 0]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
+        "code": "class DataFrameNumericIndexing:\n    def time_loc(self, index, index_structure):\n        self.df.loc[:100, 0]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
         "min_run_count": 2,
         "name": "indexing.DataFrameNumericIndexing.time_loc",
         "number": 0,
@@ -9567,11 +9567,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "a85621866c240f052375710c72ffe0cc190d797923084092e4984bff4240dfdf",
+        "version": "bc5585104804ff589f6480e2b29a89b96a3a726f2adb565c0d80d32ac9536ba3",
         "warmup_time": -1
     },
     "indexing.DataFrameNumericIndexing.time_loc_dups": {
-        "code": "class DataFrameNumericIndexing:\n    def time_loc_dups(self, index, index_structure):\n        self.df_dup.loc[self.idx_dupe]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
+        "code": "class DataFrameNumericIndexing:\n    def time_loc_dups(self, index, index_structure):\n        self.df_dup.loc[self.idx_dupe]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
         "min_run_count": 2,
         "name": "indexing.DataFrameNumericIndexing.time_loc_dups",
         "number": 0,
@@ -9595,7 +9595,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "9789412267c4eba4099218c01b54dc8d5055978255c8cae7cd1d3f96cf362b7e",
+        "version": "e8dc76d78a93d9fc22fa6f1c9a9ebe058e23cef87c56f495b23aef1223232903",
         "warmup_time": -1
     },
     "indexing.DataFrameStringIndexing.time_at": {
@@ -9749,7 +9749,7 @@
         "warmup_time": -1
     },
     "indexing.IndexSingleRow.time_iloc_row": {
-        "code": "class IndexSingleRow:\n    def time_iloc_row(self, unique_cols):\n        self.df.iloc[10000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass IndexSingleRow:\n    def setup(self, unique_cols):\n        arr = np.arange(10**7).reshape(-1, 10)\n        df = DataFrame(arr)\n        dtypes = [\"u1\", \"u2\", \"u4\", \"u8\", \"i1\", \"i2\", \"i4\", \"i8\", \"f8\", \"f4\"]\n        for i, d in enumerate(dtypes):\n            df[i] = df[i].astype(d)\n    \n        if not unique_cols:\n            # GH#33032 single-row lookups with non-unique columns were\n            #  15x slower than with unique columns\n            df.columns = [\"A\", \"A\"] + list(df.columns[2:])\n    \n        self.df = df",
+        "code": "class IndexSingleRow:\n    def time_iloc_row(self, unique_cols):\n        self.df.iloc[10000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass IndexSingleRow:\n    def setup(self, unique_cols):\n        arr = np.arange(10**7).reshape(-1, 10)\n        df = DataFrame(arr)\n        dtypes = [\"u1\", \"u2\", \"u4\", \"u8\", \"i1\", \"i2\", \"i4\", \"i8\", \"f8\", \"f4\"]\n        for i, d in enumerate(dtypes):\n            df[i] = df[i].astype(d)\n    \n        if not unique_cols:\n            # GH#33032 single-row lookups with non-unique columns were\n            #  15x slower than with unique columns\n            df.columns = [\"A\", \"A\", *list(df.columns[2:])]\n    \n        self.df = df",
         "min_run_count": 2,
         "name": "indexing.IndexSingleRow.time_iloc_row",
         "number": 0,
@@ -9767,11 +9767,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "4e20d2ce44a18740b78a7eae0eab3b3352a211486335db125fa22f685c9c5c68",
+        "version": "952175cac780bc7360c7fc1e34b2ba180cc4625a1404910deefce863d8614276",
         "warmup_time": -1
     },
     "indexing.IndexSingleRow.time_loc_row": {
-        "code": "class IndexSingleRow:\n    def time_loc_row(self, unique_cols):\n        self.df.loc[10000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass IndexSingleRow:\n    def setup(self, unique_cols):\n        arr = np.arange(10**7).reshape(-1, 10)\n        df = DataFrame(arr)\n        dtypes = [\"u1\", \"u2\", \"u4\", \"u8\", \"i1\", \"i2\", \"i4\", \"i8\", \"f8\", \"f4\"]\n        for i, d in enumerate(dtypes):\n            df[i] = df[i].astype(d)\n    \n        if not unique_cols:\n            # GH#33032 single-row lookups with non-unique columns were\n            #  15x slower than with unique columns\n            df.columns = [\"A\", \"A\"] + list(df.columns[2:])\n    \n        self.df = df",
+        "code": "class IndexSingleRow:\n    def time_loc_row(self, unique_cols):\n        self.df.loc[10000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass IndexSingleRow:\n    def setup(self, unique_cols):\n        arr = np.arange(10**7).reshape(-1, 10)\n        df = DataFrame(arr)\n        dtypes = [\"u1\", \"u2\", \"u4\", \"u8\", \"i1\", \"i2\", \"i4\", \"i8\", \"f8\", \"f4\"]\n        for i, d in enumerate(dtypes):\n            df[i] = df[i].astype(d)\n    \n        if not unique_cols:\n            # GH#33032 single-row lookups with non-unique columns were\n            #  15x slower than with unique columns\n            df.columns = [\"A\", \"A\", *list(df.columns[2:])]\n    \n        self.df = df",
         "min_run_count": 2,
         "name": "indexing.IndexSingleRow.time_loc_row",
         "number": 0,
@@ -9789,7 +9789,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "b1ae71b2de36f0424ee21d6b377c7e4370496ce8ed29f92ce82786280ff4c9db",
+        "version": "391426f86774e23d09260fda49aa3635ff8d33e4c2c4294dbc84ee6e94dae24b",
         "warmup_time": -1
     },
     "indexing.InsertColumns.time_assign_list_like_with_setitem": {
@@ -10488,7 +10488,7 @@
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_getitem_array": {
-        "code": "class NumericSeriesIndexing:\n    def time_getitem_array(self, index, index_structure):\n        self.data[self.array]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_getitem_array(self, index, index_structure):\n        self.data[self.array]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_getitem_array",
         "number": 0,
@@ -10512,11 +10512,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "f8dbc1486bd95bff70285ace102a5d9ae45c39e61501c81985e19c24fef1d788",
+        "version": "6fc3b9cd287ab0e66862775c735b0aceb630afcd5e0f8030253c68b17eb13485",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_getitem_list_like": {
-        "code": "class NumericSeriesIndexing:\n    def time_getitem_list_like(self, index, index_structure):\n        self.data[[800000]]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_getitem_list_like(self, index, index_structure):\n        self.data[[800000]]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_getitem_list_like",
         "number": 0,
@@ -10540,11 +10540,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "767f017c9055f888f75b6eed2e15a080b0b64319d1095620556c015c88fa110d",
+        "version": "7f4385cc2d7ae69d542f44678c43222b8804d7a835509997f052505562c59b59",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_getitem_lists": {
-        "code": "class NumericSeriesIndexing:\n    def time_getitem_lists(self, index, index_structure):\n        self.data[self.array_list]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_getitem_lists(self, index, index_structure):\n        self.data[self.array_list]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_getitem_lists",
         "number": 0,
@@ -10568,11 +10568,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "443e55142dfd34591a735feb3d4d744e6958acb9018b753424bb95601e47a666",
+        "version": "a1666d79bea7a8446f330e2e49cfa88e0ca44bf7b0631f71a4847d16c14fc33e",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_getitem_scalar": {
-        "code": "class NumericSeriesIndexing:\n    def time_getitem_scalar(self, index, index_structure):\n        self.data[800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_getitem_scalar(self, index, index_structure):\n        self.data[800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_getitem_scalar",
         "number": 0,
@@ -10596,11 +10596,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "73c063a362862485753efeb9a6fbc07336e18a6c35add26bec792086df47b674",
+        "version": "524e63457ee3157c24ff6730be2eabf91763fcecb0901de4ac191d87dbcdec5d",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_getitem_slice": {
-        "code": "class NumericSeriesIndexing:\n    def time_getitem_slice(self, index, index_structure):\n        self.data[:800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_getitem_slice(self, index, index_structure):\n        self.data[:800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_getitem_slice",
         "number": 0,
@@ -10624,11 +10624,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "53dd251b95b13c6d4735cc1d1ad7f926e4ec0328748779a56fa1c63f4fa359a0",
+        "version": "1697c4923e28ddfc2e4f3c3225745dde6593b8373afcd0c591de85f255572e38",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_iloc_array": {
-        "code": "class NumericSeriesIndexing:\n    def time_iloc_array(self, index, index_structure):\n        self.data.iloc[self.array]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_iloc_array(self, index, index_structure):\n        self.data.iloc[self.array]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_iloc_array",
         "number": 0,
@@ -10652,11 +10652,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "7ca4d36d48a371195da509750de2d5dbb5fe15f466c419bd88a3d832c7339921",
+        "version": "23abec7d4fd241baa5ab5469ea2fa8c441ba0d4b6ee61cc87a0a06c52be6b348",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_iloc_list_like": {
-        "code": "class NumericSeriesIndexing:\n    def time_iloc_list_like(self, index, index_structure):\n        self.data.iloc[[800000]]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_iloc_list_like(self, index, index_structure):\n        self.data.iloc[[800000]]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_iloc_list_like",
         "number": 0,
@@ -10680,11 +10680,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "e6eb0977e121dbf9c0f8fed57bba4cbd0712e219c303813a323edfbeb879ca5f",
+        "version": "a76fc22afbfa67c25bac148ae4ff2e3e005bda5c6d3ae4166a0754b44a58b8af",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_iloc_scalar": {
-        "code": "class NumericSeriesIndexing:\n    def time_iloc_scalar(self, index, index_structure):\n        self.data.iloc[800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_iloc_scalar(self, index, index_structure):\n        self.data.iloc[800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_iloc_scalar",
         "number": 0,
@@ -10708,11 +10708,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "d5a3df9b91de4f27357390975b96e77f6fe4ed9eced3a16044211134bc38617b",
+        "version": "f1181926713e5e6a7762e36df2b8e3efc4b390d8c6b03861dea98bd74bd9c112",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_iloc_slice": {
-        "code": "class NumericSeriesIndexing:\n    def time_iloc_slice(self, index, index_structure):\n        self.data.iloc[:800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_iloc_slice(self, index, index_structure):\n        self.data.iloc[:800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_iloc_slice",
         "number": 0,
@@ -10736,11 +10736,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "6dd75593c3e3cf6040fc6b6152cae16559fec377ae607105dc5867d7257d6e6b",
+        "version": "c9d81db6a9d644bd201b63090b4f827e149d50f4ab8c61b8f398e996a85df02d",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_loc_array": {
-        "code": "class NumericSeriesIndexing:\n    def time_loc_array(self, index, index_structure):\n        self.data.loc[self.array]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_loc_array(self, index, index_structure):\n        self.data.loc[self.array]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_loc_array",
         "number": 0,
@@ -10764,11 +10764,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "3165bdce66ae50b67ee74bf5b720ddc68ab182ec7445bc812e1c0a6282bdf773",
+        "version": "8eaa5eb226f7719137686ee616d066c81e6002d562a9bd93bff1f4d45cffcab4",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_loc_list_like": {
-        "code": "class NumericSeriesIndexing:\n    def time_loc_list_like(self, index, index_structure):\n        self.data.loc[[800000]]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_loc_list_like(self, index, index_structure):\n        self.data.loc[[800000]]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_loc_list_like",
         "number": 0,
@@ -10792,11 +10792,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "9bd41a8e0e77f49c1815e6441bfed382f1642a7ffd8d470af8ae822095871ce7",
+        "version": "1f8f4622ede8e2da65f636528aea44c6a3ff7cef01c43274b6101af41ebdf63e",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_loc_scalar": {
-        "code": "class NumericSeriesIndexing:\n    def time_loc_scalar(self, index, index_structure):\n        self.data.loc[800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_loc_scalar(self, index, index_structure):\n        self.data.loc[800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_loc_scalar",
         "number": 0,
@@ -10820,11 +10820,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "ca036299851e1902e2e167658690aabd8b3c4a23c4565717eaed87565bac7725",
+        "version": "0ebecee9783f42f6b8af15042d80ae5ca5be3e6fa0c235c7c65ff356de37804f",
         "warmup_time": -1
     },
     "indexing.NumericSeriesIndexing.time_loc_slice": {
-        "code": "class NumericSeriesIndexing:\n    def time_loc_slice(self, index, index_structure):\n        self.data.loc[:800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                list(range(55)) + [54] + list(range(55, N - 1)), dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
+        "code": "class NumericSeriesIndexing:\n    def time_loc_slice(self, index, index_structure):\n        self.data.loc[:800000]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass NumericSeriesIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**6\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.data = Series(np.random.rand(N), index=indices[index_structure])\n        self.array = np.arange(10000)\n        self.array_list = self.array.tolist()",
         "min_run_count": 2,
         "name": "indexing.NumericSeriesIndexing.time_loc_slice",
         "number": 0,
@@ -10848,7 +10848,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "7ec9524466f40bb446af6342c1220299a782e5c6c08e8a074782d963360ff732",
+        "version": "a4c30f60bd85b36f41e6c8757767c37a0449aae6c4d304e96fd4197963da90a5",
         "warmup_time": -1
     },
     "indexing.Setitem.time_setitem": {
@@ -15900,7 +15900,7 @@
         "warmup_time": -1
     },
     "multiindex_object.Unique.time_unique": {
-        "code": "class Unique:\n    def time_unique(self, dtype_val):\n        self.midx.unique()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Unique:\n    def setup(self, dtype_val):\n        level = Series(\n            [1, 2, dtype_val[1], dtype_val[1]] + list(range(1_000_000)),\n            dtype=dtype_val[0],\n        )\n        self.midx = MultiIndex.from_arrays([level, level])\n    \n        level_dups = Series(\n            [1, 2, dtype_val[1], dtype_val[1]] + list(range(500_000)) * 2,\n            dtype=dtype_val[0],\n        )\n    \n        self.midx_dups = MultiIndex.from_arrays([level_dups, level_dups])",
+        "code": "class Unique:\n    def time_unique(self, dtype_val):\n        self.midx.unique()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Unique:\n    def setup(self, dtype_val):\n        level = Series(\n            [1, 2, dtype_val[1], dtype_val[1], *list(range(1000000))],\n            dtype=dtype_val[0],\n        )\n        self.midx = MultiIndex.from_arrays([level, level])\n    \n        level_dups = Series(\n            [1, 2, dtype_val[1], dtype_val[1]] + list(range(500_000)) * 2,\n            dtype=dtype_val[0],\n        )\n    \n        self.midx_dups = MultiIndex.from_arrays([level_dups, level_dups])",
         "min_run_count": 2,
         "name": "multiindex_object.Unique.time_unique",
         "number": 0,
@@ -15918,11 +15918,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "92002a61c3c2deb0be986b18be58b6f290334692a0ddda344728454264d8c69f",
+        "version": "74dd79bb98ee896588c99c93e70f7eb214a7a8e09154f370ece313c685909517",
         "warmup_time": -1
     },
     "multiindex_object.Unique.time_unique_dups": {
-        "code": "class Unique:\n    def time_unique_dups(self, dtype_val):\n        self.midx_dups.unique()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Unique:\n    def setup(self, dtype_val):\n        level = Series(\n            [1, 2, dtype_val[1], dtype_val[1]] + list(range(1_000_000)),\n            dtype=dtype_val[0],\n        )\n        self.midx = MultiIndex.from_arrays([level, level])\n    \n        level_dups = Series(\n            [1, 2, dtype_val[1], dtype_val[1]] + list(range(500_000)) * 2,\n            dtype=dtype_val[0],\n        )\n    \n        self.midx_dups = MultiIndex.from_arrays([level_dups, level_dups])",
+        "code": "class Unique:\n    def time_unique_dups(self, dtype_val):\n        self.midx_dups.unique()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Unique:\n    def setup(self, dtype_val):\n        level = Series(\n            [1, 2, dtype_val[1], dtype_val[1], *list(range(1000000))],\n            dtype=dtype_val[0],\n        )\n        self.midx = MultiIndex.from_arrays([level, level])\n    \n        level_dups = Series(\n            [1, 2, dtype_val[1], dtype_val[1]] + list(range(500_000)) * 2,\n            dtype=dtype_val[0],\n        )\n    \n        self.midx_dups = MultiIndex.from_arrays([level_dups, level_dups])",
         "min_run_count": 2,
         "name": "multiindex_object.Unique.time_unique_dups",
         "number": 0,
@@ -15940,7 +15940,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "e7f6ae2612b4e61ab7e9b6ec0fa03d09c37653dcccd19cf141ea041ff0d0eec7",
+        "version": "ddbdce33cdbbf8073a776ea345818c37fb43ab0bf36df81c3cc14b2fc3037cfc",
         "warmup_time": -1
     },
     "multiindex_object.Values.time_datetime_level_values_copy": {

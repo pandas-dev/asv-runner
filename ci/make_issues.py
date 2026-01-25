@@ -33,6 +33,8 @@ def get_commit_range(*, benchmarks: pd.DataFrame, sha: str) -> str:
 
 
 def execute(cmd: str) -> str:
+    print("Executing command")
+    print(f"`{cmd}`")
     response = subprocess.run(cmd, shell=True, capture_output=True, check=False)
     if response.returncode != 0:
         raise ValueError(f"{response.stdout.decode()}\n\n{response.stderr.decode()}")

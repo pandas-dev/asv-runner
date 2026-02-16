@@ -9458,6 +9458,30 @@
         "version": "16258f12b7c725f7ffc21ffed9c69bd9751f02f6a459f86e81c20750c1fc1bba",
         "warmup_time": -1
     },
+    "indexing.DataFrameGetitemDuplicateColumns.time_getitem_single_column_with_duplicate_columns": {
+        "code": "class DataFrameGetitemDuplicateColumns:\n    def time_getitem_single_column_with_duplicate_columns(self, ncols):\n        for _ in range(100):\n            self.df[\"key\"]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameGetitemDuplicateColumns:\n    def setup(self, ncols):\n        # ncols-1 duplicate names + one unique column we access\n        cols = [\"a\"] * (ncols - 1) + [\"key\"]\n        self.df = DataFrame(0, index=range(100), columns=cols)",
+        "min_run_count": 2,
+        "name": "indexing.DataFrameGetitemDuplicateColumns.time_getitem_single_column_with_duplicate_columns",
+        "number": 0,
+        "param_names": [
+            "ncols"
+        ],
+        "params": [
+            [
+                "1000",
+                "10000",
+                "100000",
+                "1000000"
+            ]
+        ],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "37b5db9dea9a472d08b27949f8c5fd5b8d283bbca0d718a56ab095b1e8e2e0b7",
+        "warmup_time": -1
+    },
     "indexing.DataFrameNumericIndexing.time_bool_indexer": {
         "code": "class DataFrameNumericIndexing:\n    def time_bool_indexer(self, index, index_structure):\n        self.df[self.bool_indexer]\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass DataFrameNumericIndexing:\n    def setup(self, dtype, index_structure):\n        N = 10**5\n        indices = {\n            \"unique_monotonic_inc\": Index(range(N), dtype=dtype),\n            \"nonunique_monotonic_inc\": Index(\n                [*list(range(55)), 54, *list(range(55, N - 1))], dtype=dtype\n            ),\n        }\n        self.idx_dupe = np.array(range(30)) * 99\n        self.df = DataFrame(np.random.randn(N, 5), index=indices[index_structure])\n        self.df_dup = concat([self.df, 2 * self.df, 3 * self.df])\n        self.bool_indexer = [True] * (N // 2) + [False] * (N - N // 2)",
         "min_run_count": 2,

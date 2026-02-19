@@ -11,7 +11,7 @@ env:
   # Results and other data are stored away from the main branch.
   # This keeps the main branch clean and allows us to clear out
   # objects / history after being built up for long periods of time.
-  BRANCH_NAME: pandas_20250203
+  BRANCH_NAME: pandas_2026_01_04
   PYTHON_VERSION: 3.12
 
 permissions:

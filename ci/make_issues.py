@@ -107,6 +107,7 @@ def make_envs_diff(*, input_path: Path, benchmarks: pd.DataFrame, sha: str) -> s
     result = subprocess.run(
         ["diff", prev_env, curr_env], capture_output=True, check=False
     ).stdout.decode()
+    result = f"Environment changes from previous commit:\n```\n{result}\n```"
     return result
 
 
@@ -161,13 +162,13 @@ def run(input_path: str | Path):
         )
         issue_url = execute(cmd)
 
-        issue_number = issue_url[issue_url.rfind("/") + 1 :]
+        issue_number = issue_url[issue_url.rfind("/") + 1 :].strip()
         envs_diff = make_envs_diff(
             input_path=input_path, benchmarks=benchmarks, sha=sha
         )
         if len(envs_diff) >= GITHUB_ISSUE_LENGTH:
             envs_diff = envs_diff[:GITHUB_ISSUE_LENGTH]
-            envs_diff += "\nWARNING: Body has been clipped due to length."
+            envs_diff += "\n```\n\nWARNING: Body has been clipped due to length."
         cmd = (
             f"gh issue comment {issue_number}"
             rf" --repo pandas-dev/asv-runner"

@@ -13202,7 +13202,7 @@
         "warmup_time": -1
     },
     "io.json.ReadJSON.time_read_json": {
-        "code": "class ReadJSON:\n    def time_read_json(self, orient, index):\n        read_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ReadJSON:\n    def setup(self, orient, index):\n        N = 100000\n        indexes = {\n            \"int\": np.arange(N),\n            \"datetime\": date_range(\"20000101\", periods=N, freq=\"h\"),\n        }\n        df = DataFrame(\n            np.random.randn(N, 5),\n            columns=[f\"float_{i}\" for i in range(5)],\n            index=indexes[index],\n        )\n        df.to_json(self.fname, orient=orient)",
+        "code": "class ReadJSON:\n    def time_read_json(self, orient, index):\n        read_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ReadJSON:\n    def setup(self, orient, index):\n        N = 100000\n        indexes = {\n            \"int\": np.arange(N),\n            \"datetime\": date_range(\"20000101\", periods=N, freq=\"h\"),\n        }\n        df = DataFrame(\n            np.random.randn(N, 5),\n            columns=[f\"float_{i}\" for i in range(5)],\n            index=indexes[index],\n        )\n        df.to_json(self.fname, orient=orient, date_format=\"iso\")",
         "min_run_count": 2,
         "name": "io.json.ReadJSON.time_read_json",
         "number": 0,
@@ -13226,7 +13226,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "060ff02601813d99dcb85d35f2248cc6d5ee446b65bd53e44b8047fbff44c093",
+        "version": "d668c2eb40008929213c982a39e872510603cf20db524539958a9a0dc0b3a3fb",
         "warmup_time": -1
     },
     "io.json.ReadJSONLines.peakmem_read_json_lines": {
@@ -13344,7 +13344,7 @@
         "warmup_time": -1
     },
     "io.json.ToJSON.peakmem_to_json": {
-        "code": "class ToJSON:\n    def peakmem_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSON:\n    def setup(self, orient, frame):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n    \n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
+        "code": "class ToJSON:\n    def peakmem_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient, date_format=\"iso\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSON:\n    def setup(self, orient, frame):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n    \n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
         "name": "io.json.ToJSON.peakmem_to_json",
         "param_names": [
             "orient",
@@ -13368,10 +13368,10 @@
         ],
         "type": "peakmemory",
         "unit": "bytes",
-        "version": "87eb3ebd846df1b3f04989da149647f27085e365975bb82ce1a093db9bac8f5b"
+        "version": "aabf0132a4402e04256a00122aec92751e2f177f4832a8447349df14231f3edf"
     },
     "io.json.ToJSON.time_to_json": {
-        "code": "class ToJSON:\n    def time_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSON:\n    def setup(self, orient, frame):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n    \n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
+        "code": "class ToJSON:\n    def time_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient, date_format=\"iso\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSON:\n    def setup(self, orient, frame):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n    \n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
         "min_run_count": 2,
         "name": "io.json.ToJSON.time_to_json",
         "number": 0,
@@ -13400,7 +13400,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "9c17efa9080b8d5102c0beaef576f498ed86d1fe6e4fba86df65a39335f72728",
+        "version": "93494362d14390311effa248d5effeb5923a015ea1a6698143661c366649bfb7",
         "warmup_time": -1
     },
     "io.json.ToJSONISO.time_iso_format": {
@@ -13429,7 +13429,7 @@
         "warmup_time": -1
     },
     "io.json.ToJSONLines.time_delta_int_tstamp_lines": {
-        "code": "class ToJSONLines:\n    def time_delta_int_tstamp_lines(self):\n        self.df_td_int_ts.to_json(self.fname, orient=\"records\", lines=True)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONLines:\n    def setup(self):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
+        "code": "class ToJSONLines:\n    def time_delta_int_tstamp_lines(self):\n        self.df_td_int_ts.to_json(\n            self.fname, orient=\"records\", lines=True, date_format=\"iso\"\n        )\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONLines:\n    def setup(self):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
         "min_run_count": 2,
         "name": "io.json.ToJSONLines.time_delta_int_tstamp_lines",
         "number": 0,
@@ -13440,7 +13440,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "7a68f6c940cbfe5b7a9d9027dbcf1d2f2156232603726e0c67f7c89c756638fa",
+        "version": "7a38b9430831dbc2672808977795e08c955788e9fbe13ab0a898943328d3b5b2",
         "warmup_time": -1
     },
     "io.json.ToJSONLines.time_float_int_lines": {
@@ -13489,7 +13489,7 @@
         "warmup_time": -1
     },
     "io.json.ToJSONLines.time_floats_with_dt_index_lines": {
-        "code": "class ToJSONLines:\n    def time_floats_with_dt_index_lines(self):\n        self.df_date_idx.to_json(self.fname, orient=\"records\", lines=True)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONLines:\n    def setup(self):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
+        "code": "class ToJSONLines:\n    def time_floats_with_dt_index_lines(self):\n        self.df_date_idx.to_json(\n            self.fname, orient=\"records\", lines=True, date_format=\"iso\"\n        )\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONLines:\n    def setup(self):\n        N = 10**5\n        ncols = 5\n        index = date_range(\"20000101\", periods=N, freq=\"h\")\n        timedeltas = timedelta_range(start=1, periods=N, freq=\"s\")\n        datetimes = date_range(start=1, periods=N, freq=\"s\")\n        ints = np.random.randint(100000000, size=N)\n        longints = sys.maxsize * np.random.randint(100000000, size=N)\n        floats = np.random.randn(N)\n        strings = Index([f\"i-{i}\" for i in range(N)], dtype=object)\n        self.df = DataFrame(np.random.randn(N, ncols), index=np.arange(N))\n        self.df_date_idx = DataFrame(np.random.randn(N, ncols), index=index)\n        self.df_td_int_ts = DataFrame(\n            {\n                \"td_1\": timedeltas,\n                \"td_2\": timedeltas,\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"ts_1\": datetimes,\n                \"ts_2\": datetimes,\n            },\n            index=index,\n        )\n        self.df_int_floats = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"int_3\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"float_3\": floats,\n            },\n            index=index,\n        )\n        self.df_int_float_str = DataFrame(\n            {\n                \"int_1\": ints,\n                \"int_2\": ints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )\n        self.df_longint_float_str = DataFrame(\n            {\n                \"longint_1\": longints,\n                \"longint_2\": longints,\n                \"float_1\": floats,\n                \"float_2\": floats,\n                \"str_1\": strings,\n                \"str_2\": strings,\n            },\n            index=index,\n        )",
         "min_run_count": 2,
         "name": "io.json.ToJSONLines.time_floats_with_dt_index_lines",
         "number": 0,
@@ -13500,7 +13500,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "2414d07086e041907667e8b1ba53fa8258be5e0ae02f44cba6c71675e8e82d90",
+        "version": "15d3e04bee4367c7c427c109cb2046e5f740242ac7e452662e2da6ce06e2ee80",
         "warmup_time": -1
     },
     "io.json.ToJSONLines.time_floats_with_int_idex_lines": {
@@ -13523,7 +13523,7 @@
         "name": "io.json.ToJSONMem.peakmem_float",
         "param_names": [],
         "params": [],
-        "setup_cache_key": "io.json:289",
+        "setup_cache_key": "io.json:293",
         "type": "peakmemory",
         "unit": "bytes",
         "version": "00ee9841b98283beeb453d7dfd4cd72008d10a2028768798140f0ad54c56b581"
@@ -13533,23 +13533,23 @@
         "name": "io.json.ToJSONMem.peakmem_int",
         "param_names": [],
         "params": [],
-        "setup_cache_key": "io.json:289",
+        "setup_cache_key": "io.json:293",
         "type": "peakmemory",
         "unit": "bytes",
         "version": "a0f0fbfe022c1f66c3bb2fb28d8e1a6ecea8488a0a4252439e9a1cb94f397c3e"
     },
     "io.json.ToJSONMem.peakmem_time": {
-        "code": "class ToJSONMem:\n    def peakmem_time(self, frames):\n        df = frames[\"datetime\"]\n        for _ in range(10_000):\n            df.to_json(orient=\"table\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONMem:\n    def setup_cache(self):\n        df = DataFrame([[1]])\n        df2 = DataFrame(range(8), date_range(\"1/1/2000\", periods=8, freq=\"min\"))\n        frames = {\"int\": df, \"float\": df.astype(float), \"datetime\": df2}\n    \n        return frames",
+        "code": "class ToJSONMem:\n    def peakmem_time(self, frames):\n        df = frames[\"datetime\"]\n        for _ in range(10_000):\n            df.to_json(orient=\"table\", date_format=\"iso\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONMem:\n    def setup_cache(self):\n        df = DataFrame([[1]])\n        df2 = DataFrame(range(8), date_range(\"1/1/2000\", periods=8, freq=\"min\"))\n        frames = {\"int\": df, \"float\": df.astype(float), \"datetime\": df2}\n    \n        return frames",
         "name": "io.json.ToJSONMem.peakmem_time",
         "param_names": [],
         "params": [],
-        "setup_cache_key": "io.json:289",
+        "setup_cache_key": "io.json:293",
         "type": "peakmemory",
         "unit": "bytes",
-        "version": "2260dc5c098f332173c0b87ea1e18f2c50b70b762d04871af1f0c6186d9cfb2f"
+        "version": "82f609068aaae8d7c800e2c11f29b3430216e5d0cb6dc2678d14f12d7c5bcaf8"
     },
     "io.json.ToJSONWide.peakmem_to_json": {
-        "code": "class ToJSON:\n    def peakmem_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
+        "code": "class ToJSON:\n    def peakmem_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient, date_format=\"iso\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
         "name": "io.json.ToJSONWide.peakmem_to_json",
         "param_names": [
             "orient",
@@ -13573,10 +13573,10 @@
         ],
         "type": "peakmemory",
         "unit": "bytes",
-        "version": "f179e468594888d4ad11b82d624fc4c3925d4831054986c7642b6a7938e395d8"
+        "version": "7ea189eff7366cb904ebcf3223579a28e623c31cc984d6c2467e3510ac64801d"
     },
     "io.json.ToJSONWide.peakmem_to_json_wide": {
-        "code": "class ToJSONWide:\n    def peakmem_to_json_wide(self, orient, frame):\n        self.df_wide.to_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
+        "code": "class ToJSONWide:\n    def peakmem_to_json_wide(self, orient, frame):\n        self.df_wide.to_json(self.fname, orient=orient, date_format=\"iso\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
         "name": "io.json.ToJSONWide.peakmem_to_json_wide",
         "param_names": [
             "orient",
@@ -13600,10 +13600,10 @@
         ],
         "type": "peakmemory",
         "unit": "bytes",
-        "version": "350c040ee03cb09b3b2af80aacdb6f89f0b64fb12027e7abfcecf1754316da0d"
+        "version": "b34c85ca047b824c68a5379c208e60e39c86c6d2d2b29ca2f4bbb0cb0aa61e5b"
     },
     "io.json.ToJSONWide.time_to_json": {
-        "code": "class ToJSON:\n    def time_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
+        "code": "class ToJSON:\n    def time_to_json(self, orient, frame):\n        getattr(self, frame).to_json(self.fname, orient=orient, date_format=\"iso\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
         "min_run_count": 2,
         "name": "io.json.ToJSONWide.time_to_json",
         "number": 0,
@@ -13632,11 +13632,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "3efe5275ae2f37aaa5320e63422ce5b375719e691728af347d4018c67aef213a",
+        "version": "7a9dbfe6498e603aa6f68c0990e6021105b2cee4d43f27e14b19791d48b8355e",
         "warmup_time": -1
     },
     "io.json.ToJSONWide.time_to_json_wide": {
-        "code": "class ToJSONWide:\n    def time_to_json_wide(self, orient, frame):\n        self.df_wide.to_json(self.fname, orient=orient)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
+        "code": "class ToJSONWide:\n    def time_to_json_wide(self, orient, frame):\n        self.df_wide.to_json(self.fname, orient=orient, date_format=\"iso\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToJSONWide:\n    def setup(self, orient, frame):\n        super().setup(orient, frame)\n        base_df = getattr(self, frame).copy()\n        df_wide = concat([base_df.iloc[:100]] * 1000, ignore_index=True, axis=1)\n        self.df_wide = df_wide",
         "min_run_count": 2,
         "name": "io.json.ToJSONWide.time_to_json_wide",
         "number": 0,
@@ -13665,7 +13665,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "aae5665173eb24e14595380fcf07cfeeab21783b5862479ee4e358e042ba6c38",
+        "version": "b8ad61604104ec13cef5fbd8646a63261c7842772813b51f9498502495a1eb71",
         "warmup_time": -1
     },
     "io.parsers.DoesStringLookLikeDatetime.time_check_datetimes": {

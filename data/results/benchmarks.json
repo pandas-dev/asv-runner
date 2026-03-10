@@ -11436,7 +11436,7 @@
         "warmup_time": -1
     },
     "inference.ToDatetimeFromIntsFloats.time_nanosec_float64": {
-        "code": "class ToDatetimeFromIntsFloats:\n    def time_nanosec_float64(self):\n        to_datetime(self.ts_nanosec_float, unit=\"ns\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n        # Non-round floats exercise cast_from_unit_vectorized (GH#57366)\n        self.ts_sec_float_fractional = self.ts_sec_float + 0.5\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
+        "code": "class ToDatetimeFromIntsFloats:\n    def time_nanosec_float64(self):\n        to_datetime(self.ts_nanosec_float, unit=\"ns\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
         "min_run_count": 2,
         "name": "inference.ToDatetimeFromIntsFloats.time_nanosec_float64",
         "number": 0,
@@ -11447,11 +11447,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "4902d395b2d9857af8c198db27e89d3b1c14d09a753c17ac7c29b013da85f541",
+        "version": "2a6fbb3b51b828848e8d7f73b076d8fae1161c6e4d53f48a8c4524fb4bd1820e",
         "warmup_time": -1
     },
     "inference.ToDatetimeFromIntsFloats.time_nanosec_int64": {
-        "code": "class ToDatetimeFromIntsFloats:\n    def time_nanosec_int64(self):\n        to_datetime(self.ts_nanosec, unit=\"ns\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n        # Non-round floats exercise cast_from_unit_vectorized (GH#57366)\n        self.ts_sec_float_fractional = self.ts_sec_float + 0.5\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
+        "code": "class ToDatetimeFromIntsFloats:\n    def time_nanosec_int64(self):\n        to_datetime(self.ts_nanosec, unit=\"ns\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
         "min_run_count": 2,
         "name": "inference.ToDatetimeFromIntsFloats.time_nanosec_int64",
         "number": 0,
@@ -11462,11 +11462,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "b44bf74e67024370693d1b51775ec72f7e10cffd7c33e92718694ce3826a92b3",
+        "version": "8970f8a6a15aef3813dcea5bb9bf3a7c39853f92d88c59907ac2830fd16daef2",
         "warmup_time": -1
     },
     "inference.ToDatetimeFromIntsFloats.time_nanosec_uint64": {
-        "code": "class ToDatetimeFromIntsFloats:\n    def time_nanosec_uint64(self):\n        to_datetime(self.ts_nanosec_uint, unit=\"ns\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n        # Non-round floats exercise cast_from_unit_vectorized (GH#57366)\n        self.ts_sec_float_fractional = self.ts_sec_float + 0.5\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
+        "code": "class ToDatetimeFromIntsFloats:\n    def time_nanosec_uint64(self):\n        to_datetime(self.ts_nanosec_uint, unit=\"ns\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
         "min_run_count": 2,
         "name": "inference.ToDatetimeFromIntsFloats.time_nanosec_uint64",
         "number": 0,
@@ -11477,11 +11477,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "e84d744dd1bcc9b574c3b914d05e7ce74fd366fbabc9a620f05380a3d727f674",
+        "version": "55b37560ce70ea683ab6134ede09ee43de470162b68416ec0ef8b0f469e90e97",
         "warmup_time": -1
     },
     "inference.ToDatetimeFromIntsFloats.time_sec_float64": {
-        "code": "class ToDatetimeFromIntsFloats:\n    def time_sec_float64(self):\n        to_datetime(self.ts_sec_float, unit=\"s\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n        # Non-round floats exercise cast_from_unit_vectorized (GH#57366)\n        self.ts_sec_float_fractional = self.ts_sec_float + 0.5\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
+        "code": "class ToDatetimeFromIntsFloats:\n    def time_sec_float64(self):\n        to_datetime(self.ts_sec_float, unit=\"s\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
         "min_run_count": 2,
         "name": "inference.ToDatetimeFromIntsFloats.time_sec_float64",
         "number": 0,
@@ -11492,26 +11492,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "74572f2c60682939572e53adf9f2e0518883051cffbbcc7171d3aadef18db3a6",
-        "warmup_time": -1
-    },
-    "inference.ToDatetimeFromIntsFloats.time_sec_float64_fractional": {
-        "code": "class ToDatetimeFromIntsFloats:\n    def time_sec_float64_fractional(self):\n        to_datetime(self.ts_sec_float_fractional, unit=\"s\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n        # Non-round floats exercise cast_from_unit_vectorized (GH#57366)\n        self.ts_sec_float_fractional = self.ts_sec_float + 0.5\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
-        "min_run_count": 2,
-        "name": "inference.ToDatetimeFromIntsFloats.time_sec_float64_fractional",
-        "number": 0,
-        "param_names": [],
-        "params": [],
-        "repeat": 0,
-        "rounds": 2,
-        "sample_time": 0.01,
-        "type": "time",
-        "unit": "seconds",
-        "version": "1e0f836499743edd6b36d194219dfd636fb19eb5135531119c1a5d0bdd1250c4",
+        "version": "412960192629b47bdb51536bd1acc465c6644d94331ec0b060809f15f2270d21",
         "warmup_time": -1
     },
     "inference.ToDatetimeFromIntsFloats.time_sec_int64": {
-        "code": "class ToDatetimeFromIntsFloats:\n    def time_sec_int64(self):\n        to_datetime(self.ts_sec, unit=\"s\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n        # Non-round floats exercise cast_from_unit_vectorized (GH#57366)\n        self.ts_sec_float_fractional = self.ts_sec_float + 0.5\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
+        "code": "class ToDatetimeFromIntsFloats:\n    def time_sec_int64(self):\n        to_datetime(self.ts_sec, unit=\"s\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
         "min_run_count": 2,
         "name": "inference.ToDatetimeFromIntsFloats.time_sec_int64",
         "number": 0,
@@ -11522,11 +11507,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "25c5310b7dd1068b29c33b4470aef53cdc4242048287986672a0a55d94cef49e",
+        "version": "723bef42790ad2535ae6772086a189690bbc81c0dc720a9ae78f79b14541e1ed",
         "warmup_time": -1
     },
     "inference.ToDatetimeFromIntsFloats.time_sec_uint64": {
-        "code": "class ToDatetimeFromIntsFloats:\n    def time_sec_uint64(self):\n        to_datetime(self.ts_sec_uint, unit=\"s\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n        # Non-round floats exercise cast_from_unit_vectorized (GH#57366)\n        self.ts_sec_float_fractional = self.ts_sec_float + 0.5\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
+        "code": "class ToDatetimeFromIntsFloats:\n    def time_sec_uint64(self):\n        to_datetime(self.ts_sec_uint, unit=\"s\")\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass ToDatetimeFromIntsFloats:\n    def setup(self):\n        self.ts_sec = Series(range(1521080307, 1521685107), dtype=\"int64\")\n        self.ts_sec_uint = Series(range(1521080307, 1521685107), dtype=\"uint64\")\n        self.ts_sec_float = self.ts_sec.astype(\"float64\")\n    \n        self.ts_nanosec = 1_000_000 * self.ts_sec\n        self.ts_nanosec_uint = 1_000_000 * self.ts_sec_uint\n        self.ts_nanosec_float = self.ts_nanosec.astype(\"float64\")",
         "min_run_count": 2,
         "name": "inference.ToDatetimeFromIntsFloats.time_sec_uint64",
         "number": 0,
@@ -11537,7 +11522,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "e6055afc691f9f865ff92d1e5b2fddd8dc639b29ed63670e11f335ad52ed7a3f",
+        "version": "ca17f492874efa6d87297d7a5eb649d9b0235ba934649a093f70ea48bc399454",
         "warmup_time": -1
     },
     "inference.ToDatetimeISO8601.time_iso8601": {

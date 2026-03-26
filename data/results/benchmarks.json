@@ -9955,6 +9955,21 @@
         "version": "9682c17d993a421023a33cdfbf1ae6a67d4f2b1a8a9eb98fb60445f56f4d892e",
         "warmup_time": -1
     },
+    "indexing.LocSetitem2dValue.time_loc_setitem_2d": {
+        "code": "class LocSetitem2dValue:\n    def time_loc_setitem_2d(self):\n        self.df.loc[:, [\"a\", \"c\"]] = self.value\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass LocSetitem2dValue:\n    def setup(self):\n        nrows = 10_000_000\n        # Mixed dtypes so the setitem takes the split path.\n        self.df = DataFrame(\n            {\n                \"a\": np.zeros(nrows),\n                \"b\": np.zeros(nrows, dtype=int),\n                \"c\": np.zeros(nrows),\n            }\n        )\n        self.value = np.random.randn(nrows, 2).tolist()",
+        "min_run_count": 2,
+        "name": "indexing.LocSetitem2dValue.time_loc_setitem_2d",
+        "number": 0,
+        "param_names": [],
+        "params": [],
+        "repeat": 0,
+        "rounds": 2,
+        "sample_time": 0.01,
+        "type": "time",
+        "unit": "seconds",
+        "version": "cd64406615370360f23305e93e5934b69d283faf694e332c1449fc27441a74c0",
+        "warmup_time": -1
+    },
     "indexing.MethodLookup.time_lookup_iloc": {
         "code": "class MethodLookup:\n    def time_lookup_iloc(self, s):\n        s.iloc\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass MethodLookup:\n    def setup_cache(self):\n        s = Series()\n        return s",
         "min_run_count": 2,

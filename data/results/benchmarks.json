@@ -22994,9 +22994,9 @@
                 "'quarter'",
                 "'qyear'",
                 "'week'",
-                "'days_in_month'",
-                "'day_of_week'",
-                "'day_of_year'",
+                "'daysinmonth'",
+                "'dayofweek'",
+                "'dayofyear'",
                 "'start_time'",
                 "'end_time'"
             ]
@@ -23937,7 +23937,7 @@
         "warmup_time": -1
     },
     "tslibs.timestamp.TimestampProperties.time_dayofweek": {
-        "code": "class TimestampProperties:\n    def time_dayofweek(self, tz):\n        self.ts.day_of_week\n\n    def setup(self, tz):\n        self.ts = Timestamp(\"2017-08-25 08:16:14\", tzinfo=tz)",
+        "code": "class TimestampProperties:\n    def time_dayofweek(self, tz):\n        self.ts.dayofweek\n\n    def setup(self, tz):\n        self.ts = Timestamp(\"2017-08-25 08:16:14\", tzinfo=tz)",
         "min_run_count": 2,
         "name": "tslibs.timestamp.TimestampProperties.time_dayofweek",
         "number": 0,
@@ -23959,11 +23959,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "193b3bb5eef77eb5e2a69b717fe0a5cfe3df50ea328dff77349d7d27c6d86817",
+        "version": "e29f2f9d5602cdd3653692a09582476ebfd93e83ef6498019842c6cf6b8ec80a",
         "warmup_time": -1
     },
     "tslibs.timestamp.TimestampProperties.time_dayofyear": {
-        "code": "class TimestampProperties:\n    def time_dayofyear(self, tz):\n        self.ts.day_of_year\n\n    def setup(self, tz):\n        self.ts = Timestamp(\"2017-08-25 08:16:14\", tzinfo=tz)",
+        "code": "class TimestampProperties:\n    def time_dayofyear(self, tz):\n        self.ts.dayofyear\n\n    def setup(self, tz):\n        self.ts = Timestamp(\"2017-08-25 08:16:14\", tzinfo=tz)",
         "min_run_count": 2,
         "name": "tslibs.timestamp.TimestampProperties.time_dayofyear",
         "number": 0,
@@ -23985,7 +23985,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "715eceb6f5b6db6ec96b931b614bd57e776b92b28d926eaec07c68ca0133ca68",
+        "version": "ee2f40845ecc6394591ee911396fc80479a217eeabf14738f0a9b516b7709a70",
         "warmup_time": -1
     },
     "tslibs.timestamp.TimestampProperties.time_days_in_month": {

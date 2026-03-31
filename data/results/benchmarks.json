@@ -10890,48 +10890,6 @@
         "version": "a4c30f60bd85b36f41e6c8757767c37a0449aae6c4d304e96fd4197963da90a5",
         "warmup_time": -1
     },
-    "indexing.SeriesSetitem.time_setitem_slice_array": {
-        "code": "class SeriesSetitem:\n    def time_setitem_slice_array(self, dtype):\n        # https://github.com/pandas-dev/pandas/pull/64530\n        self.s[:] = self.arr\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SeriesSetitem:\n    def setup(self, dtype):\n        N = 500_000\n        self.s = Series(np.random.rand(N), dtype=dtype)\n        self.arr = self.s.array\n        self.arr_obj = np.asarray(self.s.array, dtype=object)",
-        "min_run_count": 2,
-        "name": "indexing.SeriesSetitem.time_setitem_slice_array",
-        "number": 0,
-        "param_names": [
-            "dtype"
-        ],
-        "params": [
-            [
-                "'str'"
-            ]
-        ],
-        "repeat": 0,
-        "rounds": 2,
-        "sample_time": 0.01,
-        "type": "time",
-        "unit": "seconds",
-        "version": "faed98156ba49b3bab377586bfbed075a97ece0498bac4b69c4d6f80e3dd4de4",
-        "warmup_time": -1
-    },
-    "indexing.SeriesSetitem.time_setitem_slice_array_infer": {
-        "code": "class SeriesSetitem:\n    def time_setitem_slice_array_infer(self, dtype):\n        self.s[:] = self.arr_obj\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass SeriesSetitem:\n    def setup(self, dtype):\n        N = 500_000\n        self.s = Series(np.random.rand(N), dtype=dtype)\n        self.arr = self.s.array\n        self.arr_obj = np.asarray(self.s.array, dtype=object)",
-        "min_run_count": 2,
-        "name": "indexing.SeriesSetitem.time_setitem_slice_array_infer",
-        "number": 0,
-        "param_names": [
-            "dtype"
-        ],
-        "params": [
-            [
-                "'str'"
-            ]
-        ],
-        "repeat": 0,
-        "rounds": 2,
-        "sample_time": 0.01,
-        "type": "time",
-        "unit": "seconds",
-        "version": "519866107bf62ec5c7baadb4fffee79eede1181a09d45aa161456fd245bc08e9",
-        "warmup_time": -1
-    },
     "indexing.Setitem.time_setitem": {
         "code": "class Setitem:\n    def time_setitem(self):\n        self.df[100] = 100\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Setitem:\n    def setup(self):\n        N = 500_000\n        cols = 500\n        self.df = DataFrame(np.random.rand(N, cols))",
         "min_run_count": 2,

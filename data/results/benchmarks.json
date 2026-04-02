@@ -4884,7 +4884,7 @@
         "warmup_time": -1
     },
     "frame_methods.Isnull.time_isnull": {
-        "code": "class Isnull:\n    def time_isnull(self):\n        isnull(self.df)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
+        "code": "class Isnull:\n    def time_isnull(self):\n        isnull(self.df)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\", \"ns\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
         "min_run_count": 2,
         "name": "frame_methods.Isnull.time_isnull",
         "number": 0,
@@ -4895,11 +4895,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "de22a45fa388dfa02f30c3a7cb1acae9fe966c2d1e68671882fa38eda4e52b3e",
+        "version": "9ab39f35a1640639a35f3b41ecc400c34f038fa83751a84b65cb73269008b062",
         "warmup_time": -1
     },
     "frame_methods.Isnull.time_isnull_floats_no_null": {
-        "code": "class Isnull:\n    def time_isnull_floats_no_null(self):\n        isnull(self.df_no_null)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
+        "code": "class Isnull:\n    def time_isnull_floats_no_null(self):\n        isnull(self.df_no_null)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\", \"ns\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
         "min_run_count": 2,
         "name": "frame_methods.Isnull.time_isnull_floats_no_null",
         "number": 0,
@@ -4910,11 +4910,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "d52c0900c393b15f62670fa1ccbc7018957cad8e340de411ad4bd5b33da9ee72",
+        "version": "578552be2c227190fe4ff52e915be7cfda6ff49ae2d8c72377df83037f576fa9",
         "warmup_time": -1
     },
     "frame_methods.Isnull.time_isnull_obj": {
-        "code": "class Isnull:\n    def time_isnull_obj(self):\n        isnull(self.df_obj)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
+        "code": "class Isnull:\n    def time_isnull_obj(self):\n        isnull(self.df_obj)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\", \"ns\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
         "min_run_count": 2,
         "name": "frame_methods.Isnull.time_isnull_obj",
         "number": 0,
@@ -4925,11 +4925,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "02fc103a644b76b012203138d72c1aedc60734a2ca5eaa97a80a3cac46bcf039",
+        "version": "ab6670b99543b93692fb85830e38e898bc1db263e24beba64875bc04d4267096",
         "warmup_time": -1
     },
     "frame_methods.Isnull.time_isnull_strngs": {
-        "code": "class Isnull:\n    def time_isnull_strngs(self):\n        isnull(self.df_strings)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
+        "code": "class Isnull:\n    def time_isnull_strngs(self):\n        isnull(self.df_strings)\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass Isnull:\n    def setup(self):\n        N = 10**3\n        self.df_no_null = DataFrame(np.random.randn(N, N))\n    \n        sample = np.array([np.nan, 1.0])\n        data = np.random.choice(sample, (N, N))\n        self.df = DataFrame(data)\n    \n        sample = np.array(list(string.ascii_letters + string.whitespace))\n        data = np.random.choice(sample, (N, N))\n        self.df_strings = DataFrame(data)\n    \n        sample = np.array(\n            [\n                NaT,\n                np.nan,\n                None,\n                np.datetime64(\"NaT\"),\n                np.timedelta64(\"NaT\", \"ns\"),\n                0,\n                1,\n                2.0,\n                \"\",\n                \"abcd\",\n            ]\n        )\n        data = np.random.choice(sample, (N, N))\n        self.df_obj = DataFrame(data)",
         "min_run_count": 2,
         "name": "frame_methods.Isnull.time_isnull_strngs",
         "number": 0,
@@ -4940,7 +4940,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "ff2d41de239a32889b66173e7caa3c0017fac8052762ae9703e5f9e07e1ef5a5",
+        "version": "7f6e0889f8aa3f8b9daac962aa5813c34590af33f4a208067dcd8c4b0ca0efa0",
         "warmup_time": -1
     },
     "frame_methods.Iteration.mem_itertuples_raw_start": {
@@ -6842,7 +6842,7 @@
         "warmup_time": -1
     },
     "groupby.CountMultiDtype.time_multi_count": {
-        "code": "class CountMultiDtype:\n    def time_multi_count(self, df):\n        df.groupby([\"key1\", \"key2\"]).count()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass CountMultiDtype:\n    def setup_cache(self):\n        n = 10000\n        offsets = np.random.randint(n, size=n).astype(\"timedelta64[ns]\")\n        dates = np.datetime64(\"now\") + offsets\n        dates[np.random.rand(n) > 0.5] = np.datetime64(\"nat\")\n        offsets[np.random.rand(n) > 0.5] = np.timedelta64(\"nat\")\n        value2 = np.random.randn(n)\n        value2[np.random.rand(n) > 0.5] = np.nan\n        obj = np.random.choice(list(\"ab\"), size=n).astype(object)\n        obj[np.random.randn(n) > 0.5] = np.nan\n        df = DataFrame(\n            {\n                \"key1\": np.random.randint(0, 500, size=n),\n                \"key2\": np.random.randint(0, 100, size=n),\n                \"dates\": dates,\n                \"value2\": value2,\n                \"value3\": np.random.randn(n),\n                \"ints\": np.random.randint(0, 1000, size=n),\n                \"obj\": obj,\n                \"offsets\": offsets,\n            }\n        )\n        return df",
+        "code": "class CountMultiDtype:\n    def time_multi_count(self, df):\n        df.groupby([\"key1\", \"key2\"]).count()\n\ndef setup(*args, **kwargs):\n    # This function just needs to be imported into each benchmark file to\n    # set up the random seed before each function.\n    # https://asv.readthedocs.io/en/latest/writing_benchmarks.html\n    np.random.seed(1234)\n\nclass CountMultiDtype:\n    def setup_cache(self):\n        n = 10000\n        offsets = np.random.randint(n, size=n).astype(\"timedelta64[ns]\")\n        dates = np.datetime64(\"now\") + offsets\n        dates[np.random.rand(n) > 0.5] = np.datetime64(\"nat\")\n        offsets[np.random.rand(n) > 0.5] = np.timedelta64(\"NaT\", \"ns\")\n        value2 = np.random.randn(n)\n        value2[np.random.rand(n) > 0.5] = np.nan\n        obj = np.random.choice(list(\"ab\"), size=n).astype(object)\n        obj[np.random.randn(n) > 0.5] = np.nan\n        df = DataFrame(\n            {\n                \"key1\": np.random.randint(0, 500, size=n),\n                \"key2\": np.random.randint(0, 100, size=n),\n                \"dates\": dates,\n                \"value2\": value2,\n                \"value3\": np.random.randn(n),\n                \"ints\": np.random.randint(0, 1000, size=n),\n                \"obj\": obj,\n                \"offsets\": offsets,\n            }\n        )\n        return df",
         "min_run_count": 2,
         "name": "groupby.CountMultiDtype.time_multi_count",
         "number": 0,
@@ -6854,7 +6854,7 @@
         "setup_cache_key": "groupby:267",
         "type": "time",
         "unit": "seconds",
-        "version": "781eccf167f79b9db2b42e6637dca3e0917b3ee82948078ab34ec1fdd55a8ba7",
+        "version": "3236bb4d8468192b999e150cd216a1bb9d62de780b44d43f48d8fa15940f75e7",
         "warmup_time": -1
     },
     "groupby.CountMultiInt.time_multi_int_count": {
@@ -23366,7 +23366,7 @@
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_components": {
-        "code": "class TimedeltaConstructor:\n    def time_from_components(self):\n        Timedelta(\n            days=1,\n            hours=2,\n            minutes=3,\n            seconds=4,\n            milliseconds=5,\n            microseconds=6,\n            nanoseconds=7,\n        )\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_components(self):\n        Timedelta(\n            days=1,\n            hours=2,\n            minutes=3,\n            seconds=4,\n            milliseconds=5,\n            microseconds=6,\n            nanoseconds=7,\n        )\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_components",
         "number": 0,
@@ -23377,11 +23377,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "976de79734124e410aadd9f6fdb589658515fb75c3456c6c5003df04e31495c8",
+        "version": "b90c578794841dbd9bb334f19d31591813f01ca9bd0a5bf691aa374025e5fe9b",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_datetime_timedelta": {
-        "code": "class TimedeltaConstructor:\n    def time_from_datetime_timedelta(self):\n        Timedelta(self.dttimedelta)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_datetime_timedelta(self):\n        Timedelta(self.dttimedelta)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_datetime_timedelta",
         "number": 0,
@@ -23392,11 +23392,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "3326b70bfe99c2a6a044540b5db8b882ec1b999993fff273029767c5717f11db",
+        "version": "e98e4816f1692c4cf80ca37b33319d83fe054e54295bd15b58494e2162fc5cb9",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_int": {
-        "code": "class TimedeltaConstructor:\n    def time_from_int(self):\n        Timedelta(123456789)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_int(self):\n        Timedelta(123456789)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_int",
         "number": 0,
@@ -23407,11 +23407,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "ebc3b0e00ba7cba6a0d3e95134a6f1c56543605b5c4f0337fd76a0b846078e4d",
+        "version": "f9486f91ca3dc3b30d79d7b6b7ab3ffad8addf1c31248a7f2f33c94126374060",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_iso_format": {
-        "code": "class TimedeltaConstructor:\n    def time_from_iso_format(self):\n        Timedelta(\"P4DT12H30M5S\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_iso_format(self):\n        Timedelta(\"P4DT12H30M5S\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_iso_format",
         "number": 0,
@@ -23422,11 +23422,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "a16446c3495768b14e84c7b2e947bdfbb1fb7558e73cd969d79d2fddd94f4961",
+        "version": "5fe60aff88e3c0de85e987c9e7e1464b51600421aaaf37e8cf45527c61954334",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_missing": {
-        "code": "class TimedeltaConstructor:\n    def time_from_missing(self):\n        Timedelta(\"nat\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_missing(self):\n        Timedelta(\"nat\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_missing",
         "number": 0,
@@ -23437,11 +23437,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "ee87e86713ff7adca408473446c87ca651516e45b5a7c43b9142fead580aad84",
+        "version": "da10a24f5310aab6c46028d4caa1492427a69bbd181af38eb49c478b355e703d",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_np_timedelta": {
-        "code": "class TimedeltaConstructor:\n    def time_from_np_timedelta(self):\n        Timedelta(self.nptimedelta64)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_np_timedelta(self):\n        Timedelta(self.nptimedelta64)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_np_timedelta",
         "number": 0,
@@ -23452,11 +23452,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "a8fe79df54c66d13d34089a76ce37bd86f35e6da129e6de26dd0235934789c8c",
+        "version": "51c26d119ba8e0ce5dd6ed9a173eb71e9768429bb8ff53fc15dd8dadbaf651db",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_pd_timedelta": {
-        "code": "class TimedeltaConstructor:\n    def time_from_pd_timedelta(self):\n        Timedelta(self.td)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_pd_timedelta(self):\n        Timedelta(self.td)\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_pd_timedelta",
         "number": 0,
@@ -23467,11 +23467,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "831bac3969b78367fedc8c945ad8667ac98baab3994380c2c72b8a30c1516c50",
+        "version": "89897603a177c73a6ee63d2d591510d8a818dc3f0237fa85903f6d284b015023",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_string": {
-        "code": "class TimedeltaConstructor:\n    def time_from_string(self):\n        Timedelta(\"1 days\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_string(self):\n        Timedelta(\"1 days\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_string",
         "number": 0,
@@ -23482,11 +23482,11 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "8da4af162b193652f720feee641b52568c67cc80c2eef6d146965283fb04bc8d",
+        "version": "1e4cba719e6acde26a6035d6a832aa800468bfa0a6cfc13b7e3d5c66f9ad35d6",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaConstructor.time_from_unit": {
-        "code": "class TimedeltaConstructor:\n    def time_from_unit(self):\n        Timedelta(1, unit=\"D\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600)\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
+        "code": "class TimedeltaConstructor:\n    def time_from_unit(self):\n        Timedelta(1, unit=\"D\")\n\n    def setup(self):\n        self.nptimedelta64 = np.timedelta64(3600, \"s\")\n        self.dttimedelta = datetime.timedelta(seconds=3600)\n        self.td = Timedelta(3600, unit=\"s\")",
         "min_run_count": 2,
         "name": "tslibs.timedelta.TimedeltaConstructor.time_from_unit",
         "number": 0,
@@ -23497,7 +23497,7 @@
         "sample_time": 0.01,
         "type": "time",
         "unit": "seconds",
-        "version": "847323667685ed5b43d8b14581d093b940ce61c95df2d08c156c1da8cd993cd5",
+        "version": "e929ed7ee6fffa3b0b2788c46e575fc70418d202d3e76725c8f5dfe13fc96901",
         "warmup_time": -1
     },
     "tslibs.timedelta.TimedeltaProperties.time_timedelta_days": {

@@ -29,13 +29,14 @@ jobs:
       issues: write
     steps:
       - name: Checkout pandas
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: pandas-dev/pandas
           fetch-depth: 0
+          lfs: 'true'
 
       - name: Checkout asv-runner results branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/

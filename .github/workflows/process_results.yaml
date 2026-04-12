@@ -40,6 +40,7 @@ jobs:
         with:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/
+          lfs: 'true'
 
       - name: Setup Python
         uses: actions/setup-python@v4

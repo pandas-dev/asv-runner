@@ -32,13 +32,15 @@ def get_commit_range(*, benchmarks: pd.DataFrame, sha: str) -> str:
     return result
 
 
-def execute(cmd: str) -> str:
+def execute(cmd: str, *, input: str | None = None) -> str:
     print("Executing command")
     print(f"`{cmd}`")
-    response = subprocess.run(cmd, shell=True, capture_output=True, check=False)
+    response = subprocess.run(
+        cmd, shell=True, capture_output=True, check=False, input=input, text=True
+    )
     if response.returncode != 0:
-        raise ValueError(f"{response.stdout.decode()}\n\n{response.stderr.decode()}")
-    return response.stdout.decode()
+        raise ValueError(f"{response.stdout}\n\n{response.stderr}")
+    return response.stdout
 
 
 # TODO: Try without this
@@ -158,9 +160,9 @@ def run(input_path: str | Path):
             f"gh issue create"
             rf" --repo pandas-dev/asv-runner"
             rf' --title "{title}"'
-            rf' --body "{body}"'
+            rf" --body-file -"
         )
-        issue_url = execute(cmd)
+        issue_url = execute(cmd, input=body)
 
         issue_number = issue_url[issue_url.rfind("/") + 1 :].strip()
         envs_diff = make_envs_diff(
@@ -172,9 +174,9 @@ def run(input_path: str | Path):
         cmd = (
             f"gh issue comment {issue_number}"
             rf" --repo pandas-dev/asv-runner"
-            rf' --body "{envs_diff}"'
+            rf" --body-file -"
         )
-        execute(cmd)
+        execute(cmd, input=envs_diff)
 
 
 if __name__ == "__main__":

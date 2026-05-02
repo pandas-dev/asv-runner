@@ -74,6 +74,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Update asv-runner branch
+        # In case there was a push by another job.
+        run: |
+          cd asv-runner
+          git fetch && git pull --rebase
+
       - name: Commit results to branch
         uses: stefanzweifel/git-auto-commit-action@v5
         with:

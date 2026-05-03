@@ -45,10 +45,15 @@ jobs:
           path: asv-runner/
           lfs: 'true'
 
-      - name: Set up Conda
+      - name: Set up pixi
         uses: ./.github/actions/setup-pixi
         with:
           environment: "asv"
+
+      - name: Debug
+        run: |
+          eval "$(pixi shell-hook)"
+          which python
 
       - name: Get Commit
         id: get-commit
@@ -65,6 +70,11 @@ jobs:
             git checkout $sha
           fi
 
+      - name: Update asv-runner branch before committing shas.txt
+        # In case there was a push by another job.
+        if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
+        run: cd asv-runner && git fetch && git pull
+
       # Prevent another job from kicking off and running on this commit
       - name: Commit shas.txt
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
@@ -79,12 +89,10 @@ jobs:
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
         run: pixi run --environment asv build-pandas --editable -Csetup-args="--werror"
 
-      - name: Debug
-        run: which python
-
       - name: Run ASV Benchmarks
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
         run: |
+          eval "$(pixi shell-hook)"
           cd asv_bench
           asv machine --machine=asvrunner --yes
           asv run --machine=asvrunner --python=same --set-commit-hash=$(git rev-parse HEAD) --show-stderr
@@ -92,20 +100,19 @@ jobs:
       - name: Update asv-runner branch
         # In case there was a push by another job.
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
-        run: |
-          cd asv-runner
-          git fetch && git pull
+        run: cd asv-runner && git fetch && git pull
 
       - name: Move results into asv-runner
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
         run: |
+          eval "$(pixi shell-hook)"
           mkdir -p asv-runner/data/results/asvrunner/
           cp asv_bench/results/benchmarks.json asv-runner/data/results/
           cp asv_bench/results/asvrunner/machine.json asv-runner/data/results/asvrunner/
           cp asv_bench/results/asvrunner/$(git rev-parse --short=8 HEAD)-existing*.json asv-runner/data/results/asvrunner/$(git rev-parse HEAD).json
 
           mkdir -p asv-runner/data/envs/
-          conda env export > asv-runner/data/envs/$(git rev-parse HEAD).yml
+          pixi list --fields name,version > asv-runner/data/envs/$(git rev-parse HEAD).yml
 
       - name: Commit results to branch
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}

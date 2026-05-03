@@ -33,7 +33,6 @@ jobs:
         with:
           repository: pandas-dev/pandas
           fetch-depth: 0
-          lfs: 'true'
 
       - name: Checkout asv-runner results branch
         uses: actions/checkout@v6
@@ -56,8 +55,7 @@ jobs:
         run: uv pip freeze
 
       - name: Copy results directory
-        run: |
-          cp -r asv-runner/data/results asv_bench/results
+        run: cp -r asv-runner/data/results asv_bench/results
 
       - name: Publish ASV Benchmarks
         run: cd asv_bench && asv publish
@@ -75,9 +73,7 @@ jobs:
 
       - name: Update asv-runner branch
         # In case there was a push by another job.
-        run: |
-          cd asv-runner
-          git fetch && git pull
+        run: cd asv-runner && git fetch && git pull
 
       - name: Commit results to branch
         uses: stefanzweifel/git-auto-commit-action@v5

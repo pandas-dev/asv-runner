@@ -46,7 +46,9 @@ jobs:
           lfs: 'true'
 
       - name: Set up Conda
-        uses: ./.github/actions/setup-conda
+        uses: ./.github/actions/setup-pixi
+        with:
+          environment: "asv"
 
       - name: Get Commit
         id: get-commit
@@ -75,7 +77,10 @@ jobs:
 
       - name: Build pandas
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
-        uses: ./.github/actions/build_pandas
+        run: pixi run --environment asv build-pandas --editable -Csetup-args="--werror"
+
+      - name: Debug
+        run: which python
 
       - name: Run ASV Benchmarks
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}

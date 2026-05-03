@@ -49,11 +49,6 @@ jobs:
         with:
           environment: "asv"
 
-      - name: Debug
-        run: |
-          eval "$(pixi shell-hook -e asv)"
-          which python
-
       - name: Get Commit
         id: get-commit
         run: |
@@ -74,15 +69,15 @@ jobs:
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
         run: cd asv-runner && git fetch && git pull
 
-#      # Prevent another job from kicking off and running on this commit
-#      - name: Commit shas.txt
-#        if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
-#        uses: stefanzweifel/git-auto-commit-action@v5
-#        with:
-#          commit_message: Update shas.txt
-#          branch: ${{ env.BRANCH_NAME }}
-#          repository: asv-runner
-#          file_pattern: 'data/shas.txt'
+      # Prevent another job from kicking off and running on this commit
+      - name: Commit shas.txt
+        if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: Update shas.txt
+          branch: ${{ env.BRANCH_NAME }}
+          repository: asv-runner
+          file_pattern: 'data/shas.txt'
 
       - name: Build pandas
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}

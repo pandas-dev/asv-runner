@@ -74,3 +74,4 @@ select = [
     "W",   # pycodestyle - warning
     "YTT", # flake8-2020
 ]
+ignore = ["A002"]

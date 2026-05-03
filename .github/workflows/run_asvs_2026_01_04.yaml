@@ -43,7 +43,6 @@ jobs:
         with:
           ref: ${{ env.BRANCH_NAME }}
           path: asv-runner/
-          lfs: 'true'
 
       - name: Set up pixi
         uses: ./.github/actions/setup-pixi

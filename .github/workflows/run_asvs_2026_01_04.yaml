@@ -51,7 +51,7 @@ jobs:
 
       - name: Debug
         run: |
-          eval "$(pixi shell-hook)"
+          eval "$(pixi shell-hook -e asv)"
           which python
 
       - name: Get Commit
@@ -91,7 +91,7 @@ jobs:
       - name: Run ASV Benchmarks
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
         run: |
-          eval "$(pixi shell-hook)"
+          eval "$(pixi shell-hook -e asv)"
           cd asv_bench
           python -m asv machine --machine=asvrunner --yes
           python -m asv run --machine=asvrunner --python=same --set-commit-hash=$(git rev-parse HEAD) --show-stderr
@@ -104,14 +104,13 @@ jobs:
       - name: Move results into asv-runner
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
         run: |
-          eval "$(pixi shell-hook)"
           mkdir -p asv-runner/data/results/asvrunner/
           cp asv_bench/results/benchmarks.json asv-runner/data/results/
           cp asv_bench/results/asvrunner/machine.json asv-runner/data/results/asvrunner/
           cp asv_bench/results/asvrunner/$(git rev-parse --short=8 HEAD)-existing*.json asv-runner/data/results/asvrunner/$(git rev-parse HEAD).json
 
           mkdir -p asv-runner/data/envs/
-          pixi list --fields name,version > asv-runner/data/envs/$(git rev-parse HEAD).yml
+          pixi list -e asv --fields name,version > asv-runner/data/envs/$(git rev-parse HEAD).yml
 
       - name: Commit results to branch
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}

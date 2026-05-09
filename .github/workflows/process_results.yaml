@@ -40,6 +40,18 @@ jobs:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/
 
+      # Idempotent migration from the legacy loose-files layout to compressed
+      # tarballs. No-op once the tarballs exist.
+      - name: Migrate legacy storage layout
+        run: |
+          if [ -d asv-runner/data/results ] && [ ! -f asv-runner/data/results.tar.zst ]; then
+            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/results.tar.zst results
+          fi
+          if [ -d asv-runner/data/envs ] && [ ! -f asv-runner/data/envs.tar.zst ]; then
+            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/envs.tar.zst envs
+          fi
+          rm -rf asv-runner/data/results asv-runner/data/envs
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -54,8 +66,14 @@ jobs:
       - name: Show environment packages
         run: uv pip freeze
 
-      - name: Copy results directory
-        run: cp -r asv-runner/data/results asv_bench/results
+      # Extract results.tar.zst into asv_bench/ so `asv publish` and
+      # process_results.py see the same paths as before. Extract envs.tar.zst
+      # back under asv-runner/data/envs/ so make_issues.py can read per-SHA
+      # env files. The extracted dirs are gitignored.
+      - name: Extract result and env archives
+        run: |
+          tar -I zstd -xf asv-runner/data/results.tar.zst -C asv_bench/
+          tar -I zstd -xf asv-runner/data/envs.tar.zst -C asv-runner/data/
 
       - name: Publish ASV Benchmarks
         run: cd asv_bench && asv publish
@@ -71,14 +89,53 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update asv-runner branch
-        # In case there was a push by another job.
-        run: cd asv-runner && git fetch && git pull
+      # Save our parquet+docs, refetch the latest tarballs (a concurrent
+      # run_asvs merge may have updated them while asv publish was running),
+      # restore our parquet+docs over the fresh tarballs, then orphan
+      # force-push. Retry on lease failure.
+      - name: Push results
+        run: |
+          SAVE=$(mktemp -d)
+          cp -r asv-runner/data/results.parquet "$SAVE/"
+          cp -r asv-runner/docs "$SAVE/"
 
-      - name: Commit results to branch
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Results
-          branch: ${{ env.BRANCH_NAME }}
-          repository: asv-runner
-          file_pattern: 'data/results.parquet docs/'
+          for attempt in $(seq 1 5); do
+            cd asv-runner
+            git fetch origin ${BRANCH_NAME}
+            git checkout -B ${BRANCH_NAME} origin/${BRANCH_NAME}
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+
+            # Idempotent migration from legacy loose-files layout.
+            if [ -d data/results ] && [ ! -f data/results.tar.zst ]; then
+              tar -C data -I 'zstd -19' -cf data/results.tar.zst results
+            fi
+            if [ -d data/envs ] && [ ! -f data/envs.tar.zst ]; then
+              tar -C data -I 'zstd -19' -cf data/envs.tar.zst envs
+            fi
+            rm -rf data/results data/envs
+
+            # Restore our parquet+docs over the freshly fetched tarballs.
+            rm -rf data/results.parquet docs
+            cp -r "$SAVE/results.parquet" data/results.parquet
+            cp -r "$SAVE/docs" docs
+
+            EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
+            git checkout --orphan fresh
+            git add -A
+            git commit -m "Results"
+            git branch -M fresh ${BRANCH_NAME}
+
+            if git push --force-with-lease=${BRANCH_NAME}:${EXPECTED} origin ${BRANCH_NAME}; then
+              echo "Push succeeded on attempt $attempt"
+              cd ..
+              exit 0
+            fi
+
+            cd ..
+            echo "Push race lost on attempt $attempt; retrying"
+            sleep $((attempt * 5 + RANDOM % 10))
+          done
+
+          echo "Failed to push after 5 attempts" >&2
+          exit 1

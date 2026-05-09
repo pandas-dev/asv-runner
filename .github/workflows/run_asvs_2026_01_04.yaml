@@ -68,14 +68,18 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            # One-shot migration from the legacy loose-files layout. Idempotent.
-            if [ -d data/results ] && [ ! -f data/results.tar.zst ]; then
-              tar -C data -I 'zstd -19' -cf data/results.tar.zst results
+            # Migrate from legacy loose uncompressed JSON/YAML files to
+            # per-file zstd. Idempotent: subsequent runs find no *.json
+            # (besides machine.json, excluded) or *.yml and the find
+            # produces no input.
+            if [ -d data/results/asvrunner ]; then
+              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
             fi
-            if [ -d data/envs ] && [ ! -f data/envs.tar.zst ]; then
-              tar -C data -I 'zstd -19' -cf data/envs.tar.zst envs
+            if [ -d data/envs ]; then
+              find data/envs -name '*.yml' -print0 |
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
             fi
-            rm -rf data/results data/envs
 
             cd ..
             sha="$(python3 asv-runner-code/ci/find_commit_to_run.py --input-path=asv-runner/data/ --repo-path=.)"
@@ -116,7 +120,8 @@ jobs:
 
   # Build pandas at the claimed SHA and run the ASV suite. No concurrency
   # lock here — multiple workflow runs benchmark different SHAs in parallel.
-  # Outputs are uploaded as a workflow artifact for the merge job.
+  # The new <sha>.json and <sha>.yml are zstd-compressed before upload so
+  # the merge job can drop them into the storage tree as-is.
   benchmark:
     name: Run benchmarks
     needs: claim
@@ -160,6 +165,10 @@ jobs:
           cp asv_bench/results/asvrunner/machine.json /tmp/upload/results/asvrunner/
           cp asv_bench/results/asvrunner/${SHORT_SHA}-existing*.json /tmp/upload/results/asvrunner/${SHA}.json
           pixi list -e asv --fields name,version > /tmp/upload/envs/${SHA}.yml
+          # Compress per-SHA files. benchmarks.json and machine.json stay
+          # uncompressed (small, overwritten each run, read directly).
+          zstd --rm -19 -q /tmp/upload/results/asvrunner/${SHA}.json
+          zstd --rm -19 -q /tmp/upload/envs/${SHA}.yml
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -167,10 +176,9 @@ jobs:
           name: asv-results-${{ needs.claim.outputs.sha }}
           path: /tmp/upload/
 
-  # Layer this run's results into the latest tarballs and orphan force-push.
-  # If a concurrent merge wins the race (lease fails), refetch — that
-  # winner's data is now in the tarballs we extract — re-add ours on top
-  # and try again.
+  # Drop this run's compressed files into the storage tree and orphan
+  # force-push. If a concurrent merge wins the race (lease fails), refetch
+  # — that winner's data is already on disk after the fetch — and redo.
   merge:
     name: Merge into storage branch
     needs: [claim, benchmark]
@@ -205,31 +213,23 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            # Idempotent migration from legacy loose-files layout.
-            if [ -d data/results ] && [ ! -f data/results.tar.zst ]; then
-              tar -C data -I 'zstd -19' -cf data/results.tar.zst results
+            # Migrate from legacy loose uncompressed files to per-file zstd.
+            # Idempotent.
+            if [ -d data/results/asvrunner ]; then
+              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
             fi
-            if [ -d data/envs ] && [ ! -f data/envs.tar.zst ]; then
-              tar -C data -I 'zstd -19' -cf data/envs.tar.zst envs
-            fi
-            rm -rf data/results data/envs
-
-            WORK=$(mktemp -d)
-            mkdir -p "$WORK/results/asvrunner" "$WORK/envs"
-            if [ -f data/results.tar.zst ]; then
-              tar -I zstd -xf data/results.tar.zst -C "$WORK"
-            fi
-            if [ -f data/envs.tar.zst ]; then
-              tar -I zstd -xf data/envs.tar.zst -C "$WORK"
+            if [ -d data/envs ]; then
+              find data/envs -name '*.yml' -print0 |
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
             fi
 
-            cp /tmp/new/results/benchmarks.json "$WORK/results/"
-            cp /tmp/new/results/asvrunner/machine.json "$WORK/results/asvrunner/"
-            cp /tmp/new/results/asvrunner/${SHA}.json "$WORK/results/asvrunner/"
-            cp /tmp/new/envs/${SHA}.yml "$WORK/envs/"
-
-            tar -C "$WORK" -I 'zstd -19' -cf data/results.tar.zst results
-            tar -C "$WORK" -I 'zstd -19' -cf data/envs.tar.zst envs
+            # Drop in this run's new files.
+            mkdir -p data/results/asvrunner data/envs
+            cp /tmp/new/results/benchmarks.json data/results/
+            cp /tmp/new/results/asvrunner/machine.json data/results/asvrunner/
+            cp /tmp/new/results/asvrunner/${SHA}.json.zst data/results/asvrunner/
+            cp /tmp/new/envs/${SHA}.yml.zst data/envs/
 
             EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
             git checkout --orphan fresh

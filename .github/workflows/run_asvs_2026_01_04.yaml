@@ -74,11 +74,11 @@ jobs:
             # produces no input.
             if [ -d data/results/asvrunner ]; then
               find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
             fi
             if [ -d data/envs ]; then
               find data/envs -name '*.yml' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
             fi
 
             cd ..
@@ -217,11 +217,11 @@ jobs:
             # Idempotent.
             if [ -d data/results/asvrunner ]; then
               find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
             fi
             if [ -d data/envs ]; then
               find data/envs -name '*.yml' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
             fi
 
             # Drop in this run's new files.

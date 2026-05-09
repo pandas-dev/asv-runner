@@ -54,11 +54,11 @@ jobs:
         run: |
           if [ -d asv-runner/data/results/asvrunner ]; then
             find asv-runner/data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
           fi
           if [ -d asv-runner/data/envs ]; then
             find asv-runner/data/envs -name '*.yml' -print0 |
-              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
           fi
 
       - name: Setup Python
@@ -131,11 +131,11 @@ jobs:
             # Idempotent.
             if [ -d data/results/asvrunner ]; then
               find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
             fi
             if [ -d data/envs ]; then
               find data/envs -name '*.yml' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q -f
             fi
 
             # Restore our parquet+docs over the freshly fetched tree.

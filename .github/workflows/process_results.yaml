@@ -40,6 +40,14 @@ jobs:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/
 
+      # ci/ scripts are run from main, not from whatever stale copy lives
+      # on the storage branch.
+      - name: Checkout asv-runner main branch
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: asv-runner-code/
+
       # Idempotent migration from the legacy loose-files layout to compressed
       # tarballs. No-op once the tarballs exist.
       - name: Migrate legacy storage layout
@@ -80,12 +88,12 @@ jobs:
 
       - name: Process ASV results
         run: |
-          python asv-runner/ci/process_results.py --input-path=asv_bench/ --output-path=asv-runner/data
+          python asv-runner-code/ci/process_results.py --input-path=asv_bench/ --output-path=asv-runner/data
           rm -rf asv-runner/docs
           mv asv_bench/html/ asv-runner/docs
 
       - name: Make issues for new regressions
-        run: python asv-runner/ci/make_issues.py --input-path=asv-runner/data
+        run: python asv-runner-code/ci/make_issues.py --input-path=asv-runner/data
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

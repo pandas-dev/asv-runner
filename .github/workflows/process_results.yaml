@@ -40,12 +40,12 @@ jobs:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/
 
-      # ci/ scripts are run from main, not from whatever stale copy lives
-      # on the storage branch.
-      - name: Checkout asv-runner main branch
+      # ci/ scripts are run from the workflow's own ref (main on schedule,
+      # whatever branch you choose on workflow_dispatch), not from whatever
+      # stale copy lives on the storage branch.
+      - name: Checkout asv-runner code
         uses: actions/checkout@v6
         with:
-          ref: main
           path: asv-runner-code/
 
       # Migrate from legacy loose uncompressed JSON/YAML files to per-file
@@ -111,6 +111,11 @@ jobs:
       # tree, then orphan force-push. Retry on lease failure.
       - name: Push results
         run: |
+          # Trace every command with its line number so we can pinpoint the
+          # failing line on the next run. Remove once the failure is fixed.
+          PS4='+ [line:$LINENO] '
+          set -x
+
           SAVE=$(mktemp -d)
           cp -r asv-runner/data/results.parquet "$SAVE/"
           cp -r asv-runner/docs "$SAVE/"

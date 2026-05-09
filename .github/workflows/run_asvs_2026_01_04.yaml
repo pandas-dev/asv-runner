@@ -47,6 +47,14 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           path: asv-runner/
 
+      # ci/ scripts are run from main, not from whatever stale copy lives
+      # on the storage branch. The storage branch is data-only.
+      - name: Checkout asv-runner main branch
+        uses: actions/checkout@v6
+        with:
+          ref: main
+          path: asv-runner-code/
+
       - name: Claim next SHA
         id: claim
         run: |
@@ -70,7 +78,7 @@ jobs:
             rm -rf data/results data/envs
 
             cd ..
-            sha="$(python3 asv-runner/ci/find_commit_to_run.py --input-path=asv-runner/data/ --repo-path=.)"
+            sha="$(python3 asv-runner-code/ci/find_commit_to_run.py --input-path=asv-runner/data/ --repo-path=.)"
             if [ "$sha" = "NONE" ]; then
               new_commit=no
               claimed=true

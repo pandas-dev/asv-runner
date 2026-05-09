@@ -2,12 +2,23 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import faulthandler
 import itertools as it
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
+
+# Print a Python stack trace on SIGABRT / SIGSEGV / etc. so a crash inside
+# pyarrow / pandas C extensions still surfaces a useful traceback.
+faulthandler.enable()
+
+
+def _step(msg: str) -> None:
+    print(f"[process_results] {msg}", flush=True)
+
 
 PARQUET_DIRNAME = "results.parquet"
 BASE_COLUMNS = ["date", "sha", "name", "params", "result", "added_date"]
@@ -21,25 +32,30 @@ DERIVED_COLUMNS = [
 
 
 def detect_regression(data: pd.DataFrame, window_size: int = 21) -> pd.DataFrame:
+    _step(f"detect_regression: input rows={len(data)}")
     data = (
         data[data["result"].notnull()]
         .set_index(["name", "params", "date"])
         .sort_index()
     )
+    _step(f"detect_regression: after notnull+sort rows={len(data)}")
     keys = ["name", "params"]
     tol = 0.95
 
+    _step("detect_regression: rolling max (established_worst)")
     data["established_worst"] = (
         data.groupby(keys, as_index=False)["result"]
         .rolling(window_size, center=True)
         .max()[["result"]]
     )
+    _step("detect_regression: rolling min (established_best)")
     data["established_best"] = (
         data.groupby(keys, as_index=False)["result"]
         .rolling(window_size, center=True)
         .min()[["result"]]
     )
 
+    _step("detect_regression: building mask")
     mask = (
         # TODO: is the arg to shift right?
         data["established_worst"].groupby(keys).shift(window_size)
@@ -49,8 +65,10 @@ def detect_regression(data: pd.DataFrame, window_size: int = 21) -> pd.DataFrame
     mask = mask.groupby(keys).shift(-(window_size - 1) // 2, fill_value=False)
 
     data["is_regression"] = mask
+    _step("detect_regression: pct_change/abs_change")
     data["pct_change"] = data.groupby(keys)["result"].pct_change()
     data["abs_change"] = data["result"] - data.groupby(keys)["result"].shift(1)
+    _step("detect_regression: done, resetting index")
     return data.reset_index()
 
 
@@ -119,19 +137,28 @@ def build_new_rows(
 
 
 def run(input_path: str | Path, output_path: str | Path):
+    _step(
+        f"run: pandas={pd.__version__} pyarrow={pa.__version__} python={sys.version.split()[0]}"
+    )
     input_path = Path(input_path)
     output_path = Path(output_path)
     parquet_path = output_path / PARQUET_DIRNAME
 
+    _step(f"run: load_existing({parquet_path})")
     existing = load_existing(parquet_path)
+    _step(f"run: existing rows={0 if existing is None else len(existing)}")
     skip_shas: set[str] = (
         set(existing["sha"].dropna().unique()) if existing is not None else set()
     )
+    _step(f"run: skip_shas count={len(skip_shas)}")
 
     today = dt.datetime.now(dt.timezone.utc).date().isoformat()
+    _step(f"run: build_new_rows (added_date={today})")
     new_rows = build_new_rows(input_path, skip_shas, today)
+    _step(f"run: new rows={len(new_rows)}")
 
     if existing is not None:
+        _step("run: concat existing + new")
         existing_base = existing.drop(
             columns=[c for c in DERIVED_COLUMNS if c in existing.columns]
         )
@@ -140,9 +167,13 @@ def run(input_path: str | Path, output_path: str | Path):
         )
     else:
         df = new_rows[BASE_COLUMNS]
+    _step(f"run: total rows={len(df)}")
 
+    _step("run: detect_regression")
     result = detect_regression(df, window_size=21)
+    _step(f"run: detected, regressions={int(result['is_regression'].sum())}")
 
+    _step(f"run: to_parquet({parquet_path})")
     result.to_parquet(
         parquet_path,
         index=False,
@@ -150,6 +181,7 @@ def run(input_path: str | Path, output_path: str | Path):
         existing_data_behavior="delete_matching",
         basename_template="part-{i}.parquet",
     )
+    _step("run: done")
 
 
 if __name__ == "__main__":

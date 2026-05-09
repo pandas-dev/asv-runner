@@ -1,0 +1,31 @@
+name: Tests
+on:
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    concurrency:
+      group: tests-${{ github.event_name == 'push' && github.run_number || github.ref }}
+      cancel-in-progress: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install .[test]
+
+      - name: Show versions
+        run: pip freeze
+
+      - name: Run pytest
+        run: pytest tests/

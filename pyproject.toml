@@ -74,4 +74,7 @@ select = [
     "W",   # pycodestyle - warning
     "YTT", # flake8-2020
 ]
-ignore = ["A002"]
+ignore = [
+    "A002",
+    "PLR2004",  # Magic value used in comparison
+]

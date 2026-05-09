@@ -48,21 +48,17 @@ jobs:
           ref: main
           path: asv-runner-code/
 
-      # Migrate from tarball layout (results.tar.zst / envs.tar.zst) to
-      # per-file zstd. Idempotent: no-op once the tarballs are gone.
+      # Migrate from legacy loose uncompressed JSON/YAML files to per-file
+      # zstd. Idempotent.
       - name: Migrate legacy storage layout
         run: |
-          if [ -f asv-runner/data/results.tar.zst ]; then
-            rm -rf asv-runner/data/results
-            tar -I zstd -xf asv-runner/data/results.tar.zst -C asv-runner/data/
-            find asv-runner/data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 | xargs -0 -r zstd --rm -19 -q
-            rm -f asv-runner/data/results.tar.zst
+          if [ -d asv-runner/data/results/asvrunner ]; then
+            find asv-runner/data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
+              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
           fi
-          if [ -f asv-runner/data/envs.tar.zst ]; then
-            rm -rf asv-runner/data/envs
-            tar -I zstd -xf asv-runner/data/envs.tar.zst -C asv-runner/data/
-            find asv-runner/data/envs -name '*.yml' -print0 | xargs -0 -r zstd --rm -19 -q
-            rm -f asv-runner/data/envs.tar.zst
+          if [ -d asv-runner/data/envs ]; then
+            find asv-runner/data/envs -name '*.yml' -print0 |
+              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
           fi
 
       - name: Setup Python
@@ -126,18 +122,15 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            # Migrate from tarball layout to per-file zstd. Idempotent.
-            if [ -f data/results.tar.zst ]; then
-              rm -rf data/results
-              tar -I zstd -xf data/results.tar.zst -C data/
-              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 | xargs -0 -r zstd --rm -19 -q
-              rm -f data/results.tar.zst
+            # Migrate from legacy loose uncompressed files to per-file zstd.
+            # Idempotent.
+            if [ -d data/results/asvrunner ]; then
+              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
             fi
-            if [ -f data/envs.tar.zst ]; then
-              rm -rf data/envs
-              tar -I zstd -xf data/envs.tar.zst -C data/
-              find data/envs -name '*.yml' -print0 | xargs -0 -r zstd --rm -19 -q
-              rm -f data/envs.tar.zst
+            if [ -d data/envs ]; then
+              find data/envs -name '*.yml' -print0 |
+                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
             fi
 
             # Restore our parquet+docs over the freshly fetched tree.

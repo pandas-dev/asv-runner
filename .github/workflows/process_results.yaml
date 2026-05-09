@@ -14,6 +14,12 @@ env:
   BRANCH_NAME: pandas_2026_01_04
   PYTHON_VERSION: 3.12
 
+# Serialize against run_asvs_2026_01_04.yaml. Both workflows write to the
+# same storage branch via orphan force-push.
+concurrency:
+  group: storage-pandas_2026_01_04
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -40,6 +46,18 @@ jobs:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/
 
+      # Idempotent migration from the legacy loose-files layout to compressed
+      # tarballs. No-op once the tarballs exist.
+      - name: Migrate legacy storage layout
+        run: |
+          if [ -d asv-runner/data/results ] && [ ! -f asv-runner/data/results.tar.zst ]; then
+            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/results.tar.zst results
+          fi
+          if [ -d asv-runner/data/envs ] && [ ! -f asv-runner/data/envs.tar.zst ]; then
+            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/envs.tar.zst envs
+          fi
+          rm -rf asv-runner/data/results asv-runner/data/envs
+
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
@@ -54,8 +72,14 @@ jobs:
       - name: Show environment packages
         run: uv pip freeze
 
-      - name: Copy results directory
-        run: cp -r asv-runner/data/results asv_bench/results
+      # Extract results.tar.zst into asv_bench/ so `asv publish` and
+      # process_results.py see the same paths as before. Extract envs.tar.zst
+      # back under asv-runner/data/envs/ so make_issues.py can read per-SHA
+      # env files. The extracted dirs are gitignored.
+      - name: Extract result and env archives
+        run: |
+          tar -I zstd -xf asv-runner/data/results.tar.zst -C asv_bench/
+          tar -I zstd -xf asv-runner/data/envs.tar.zst -C asv-runner/data/
 
       - name: Publish ASV Benchmarks
         run: cd asv_bench && asv publish
@@ -71,14 +95,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Update asv-runner branch
-        # In case there was a push by another job.
-        run: cd asv-runner && git fetch && git pull
-
-      - name: Commit results to branch
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Results
-          branch: ${{ env.BRANCH_NAME }}
-          repository: asv-runner
-          file_pattern: 'data/results.parquet docs/'
+      - name: Push results
+        run: |
+          cd asv-runner
+          EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan fresh
+          git add -A
+          git commit -m "Results"
+          git branch -M fresh ${BRANCH_NAME}
+          git push --force-with-lease=${BRANCH_NAME}:${EXPECTED} origin ${BRANCH_NAME}

@@ -15,6 +15,13 @@ env:
   # objects / history after being built up for long periods of time.
   BRANCH_NAME: pandas_2026_01_04
 
+# Serialize all writes to the storage branch (across this workflow and
+# process_results.yaml). Required because both pushes below are orphan
+# force-pushes — concurrent writers would clobber each other.
+concurrency:
+  group: storage-pandas_2026_01_04
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
@@ -44,6 +51,18 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           path: asv-runner/
 
+      # One-shot migration from the legacy loose-files layout to compressed
+      # tarballs. Idempotent: a no-op once the tarballs exist.
+      - name: Migrate legacy storage layout
+        run: |
+          if [ -d asv-runner/data/results ] && [ ! -f asv-runner/data/results.tar.zst ]; then
+            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/results.tar.zst results
+          fi
+          if [ -d asv-runner/data/envs ] && [ ! -f asv-runner/data/envs.tar.zst ]; then
+            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/envs.tar.zst envs
+          fi
+          rm -rf asv-runner/data/results asv-runner/data/envs
+
       - name: Set up pixi
         uses: ./.github/actions/setup-pixi
         with:
@@ -64,20 +83,22 @@ jobs:
             git checkout $sha
           fi
 
-      - name: Update asv-runner branch before committing shas.txt
-        # In case there was a push by another job.
+      # Claim the lock: orphan force-push so the storage branch ends up at a
+      # single commit with the new shas.txt entry. Concurrent runners
+      # (serialized by the concurrency group) see the new SHA on their next
+      # find_commit_to_run.py call and skip it.
+      - name: Push shas.txt
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
-        run: cd asv-runner && git fetch && git pull
-
-      # Prevent another job from kicking off and running on this commit
-      - name: Commit shas.txt
-        if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Update shas.txt
-          branch: ${{ env.BRANCH_NAME }}
-          repository: asv-runner
-          file_pattern: 'data/shas.txt'
+        run: |
+          cd asv-runner
+          EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan fresh
+          git add -A
+          git commit -m "Update shas.txt"
+          git branch -M fresh ${BRANCH_NAME}
+          git push --force-with-lease=${BRANCH_NAME}:${EXPECTED} origin ${BRANCH_NAME}
 
       - name: Build pandas
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
@@ -91,27 +112,41 @@ jobs:
           python -m asv machine --machine=asvrunner --yes
           python -m asv run --machine=asvrunner --python=same --set-commit-hash=$(git rev-parse HEAD) --show-stderr
 
-      - name: Update asv-runner branch
-        # In case there was a push by another job.
-        if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
-        run: cd asv-runner && git fetch && git pull
-
-      - name: Move results into asv-runner
+      # Extract the existing tarballs into a temp dir, append this run's
+      # outputs, and re-archive over the originals. Compression at zstd -19
+      # for max ratio (the cost is paid once per run, ~hourly).
+      - name: Update result archives
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
         run: |
-          mkdir -p asv-runner/data/results/asvrunner/
-          cp asv_bench/results/benchmarks.json asv-runner/data/results/
-          cp asv_bench/results/asvrunner/machine.json asv-runner/data/results/asvrunner/
-          cp asv_bench/results/asvrunner/$(git rev-parse --short=8 HEAD)-existing*.json asv-runner/data/results/asvrunner/$(git rev-parse HEAD).json
+          SHA=$(git rev-parse HEAD)
+          SHORT_SHA=$(git rev-parse --short=8 HEAD)
+          WORK=$(mktemp -d)
+          mkdir -p "$WORK/results/asvrunner" "$WORK/envs"
 
-          mkdir -p asv-runner/data/envs/
-          pixi list -e asv --fields name,version > asv-runner/data/envs/$(git rev-parse HEAD).yml
+          if [ -f asv-runner/data/results.tar.zst ]; then
+            tar -I zstd -xf asv-runner/data/results.tar.zst -C "$WORK"
+          fi
+          if [ -f asv-runner/data/envs.tar.zst ]; then
+            tar -I zstd -xf asv-runner/data/envs.tar.zst -C "$WORK"
+          fi
 
-      - name: Commit results to branch
+          cp asv_bench/results/benchmarks.json "$WORK/results/"
+          cp asv_bench/results/asvrunner/machine.json "$WORK/results/asvrunner/"
+          cp asv_bench/results/asvrunner/${SHORT_SHA}-existing*.json "$WORK/results/asvrunner/${SHA}.json"
+          pixi list -e asv --fields name,version > "$WORK/envs/${SHA}.yml"
+
+          tar -C "$WORK" -I 'zstd -19' -cf asv-runner/data/results.tar.zst results
+          tar -C "$WORK" -I 'zstd -19' -cf asv-runner/data/envs.tar.zst envs
+
+      - name: Push results
         if: ${{ steps.get-commit.outputs.new_commit == 'yes' }}
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: Results
-          branch: ${{ env.BRANCH_NAME }}
-          repository: asv-runner
-          file_pattern: 'data/results/ data/envs/'
+        run: |
+          cd asv-runner
+          EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --orphan fresh
+          git add -A
+          git commit -m "Results"
+          git branch -M fresh ${BRANCH_NAME}
+          git push --force-with-lease=${BRANCH_NAME}:${EXPECTED} origin ${BRANCH_NAME}

@@ -48,17 +48,22 @@ jobs:
           ref: main
           path: asv-runner-code/
 
-      # Idempotent migration from the legacy loose-files layout to compressed
-      # tarballs. No-op once the tarballs exist.
+      # Migrate from tarball layout (results.tar.zst / envs.tar.zst) to
+      # per-file zstd. Idempotent: no-op once the tarballs are gone.
       - name: Migrate legacy storage layout
         run: |
-          if [ -d asv-runner/data/results ] && [ ! -f asv-runner/data/results.tar.zst ]; then
-            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/results.tar.zst results
+          if [ -f asv-runner/data/results.tar.zst ]; then
+            rm -rf asv-runner/data/results
+            tar -I zstd -xf asv-runner/data/results.tar.zst -C asv-runner/data/
+            find asv-runner/data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 | xargs -0 -r zstd --rm -19 -q
+            rm -f asv-runner/data/results.tar.zst
           fi
-          if [ -d asv-runner/data/envs ] && [ ! -f asv-runner/data/envs.tar.zst ]; then
-            tar -C asv-runner/data -I 'zstd -19' -cf asv-runner/data/envs.tar.zst envs
+          if [ -f asv-runner/data/envs.tar.zst ]; then
+            rm -rf asv-runner/data/envs
+            tar -I zstd -xf asv-runner/data/envs.tar.zst -C asv-runner/data/
+            find asv-runner/data/envs -name '*.yml' -print0 | xargs -0 -r zstd --rm -19 -q
+            rm -f asv-runner/data/envs.tar.zst
           fi
-          rm -rf asv-runner/data/results asv-runner/data/envs
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -74,14 +79,21 @@ jobs:
       - name: Show environment packages
         run: uv pip freeze
 
-      # Extract results.tar.zst into asv_bench/ so `asv publish` and
-      # process_results.py see the same paths as before. Extract envs.tar.zst
-      # back under asv-runner/data/envs/ so make_issues.py can read per-SHA
-      # env files. The extracted dirs are gitignored.
-      - name: Extract result and env archives
+      # Decompress per-SHA results into asv_bench/results/asvrunner/ where
+      # asv publish and process_results.py expect them. benchmarks.json
+      # and machine.json are stored uncompressed and copied as-is. Envs are
+      # decompressed in place under data/envs/ so make_issues.py can read
+      # <sha>.yml directly; the decompressed *.yml files are gitignored.
+      # Single batched zstd invocation per group amortizes process startup.
+      - name: Decompress results and envs
         run: |
-          tar -I zstd -xf asv-runner/data/results.tar.zst -C asv_bench/
-          tar -I zstd -xf asv-runner/data/envs.tar.zst -C asv-runner/data/
+          mkdir -p asv_bench/results/asvrunner
+          cp asv-runner/data/results/benchmarks.json asv_bench/results/
+          cp asv-runner/data/results/asvrunner/machine.json asv_bench/results/asvrunner/
+          find asv-runner/data/results/asvrunner -name '*.json.zst' -print0 |
+            xargs -0 -r zstd -d -q --output-dir-flat asv_bench/results/asvrunner
+          find asv-runner/data/envs -name '*.yml.zst' -print0 |
+            xargs -0 -r zstd -d -q --output-dir-flat asv-runner/data/envs
 
       - name: Publish ASV Benchmarks
         run: cd asv_bench && asv publish
@@ -97,10 +109,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      # Save our parquet+docs, refetch the latest tarballs (a concurrent
-      # run_asvs merge may have updated them while asv publish was running),
-      # restore our parquet+docs over the fresh tarballs, then orphan
-      # force-push. Retry on lease failure.
+      # Save our parquet+docs, refetch the latest tree (a concurrent
+      # run_asvs merge may have added new <sha>.json.zst files while
+      # asv publish was running), restore our parquet+docs over the fresh
+      # tree, then orphan force-push. Retry on lease failure.
       - name: Push results
         run: |
           SAVE=$(mktemp -d)
@@ -114,16 +126,21 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            # Idempotent migration from legacy loose-files layout.
-            if [ -d data/results ] && [ ! -f data/results.tar.zst ]; then
-              tar -C data -I 'zstd -19' -cf data/results.tar.zst results
+            # Migrate from tarball layout to per-file zstd. Idempotent.
+            if [ -f data/results.tar.zst ]; then
+              rm -rf data/results
+              tar -I zstd -xf data/results.tar.zst -C data/
+              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 | xargs -0 -r zstd --rm -19 -q
+              rm -f data/results.tar.zst
             fi
-            if [ -d data/envs ] && [ ! -f data/envs.tar.zst ]; then
-              tar -C data -I 'zstd -19' -cf data/envs.tar.zst envs
+            if [ -f data/envs.tar.zst ]; then
+              rm -rf data/envs
+              tar -I zstd -xf data/envs.tar.zst -C data/
+              find data/envs -name '*.yml' -print0 | xargs -0 -r zstd --rm -19 -q
+              rm -f data/envs.tar.zst
             fi
-            rm -rf data/results data/envs
 
-            # Restore our parquet+docs over the freshly fetched tarballs.
+            # Restore our parquet+docs over the freshly fetched tree.
             rm -rf data/results.parquet docs
             cp -r "$SAVE/results.parquet" data/results.parquet
             cp -r "$SAVE/docs" docs

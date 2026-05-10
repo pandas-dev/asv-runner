@@ -1,116 +1,27 @@
 from __future__ import annotations
 
-import argparse
 import datetime as dt
 import json
 import subprocess
-from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import pytest
 
-from ci.run import (
+from asv_runner.process_results import (
     BASE_COLUMNS,
     DERIVED_COLUMNS,
     PARQUET_DIRNAME,
     build_new_rows,
     build_parquet,
-    cmd_claim,
     detect_regression,
-    escape_ansi,
     get_commit_range,
     load_existing,
     make_body,
-    orphan_push_with_retry,
-    pick_next_sha,
-    read_existing_shas,
-    time_to_str,
+    make_envs_diff,
+    stage_asv_inputs,
 )
-
-# === pick_next_sha ===
-
-
-class _FakeCompleted:
-    def __init__(self, stdout: bytes) -> None:
-        self.stdout = stdout
-
-
-def _fake_subprocess_run(shas: list[str]) -> Callable[..., _FakeCompleted]:
-    out = "\n".join(f"{sha} commit message {sha}" for sha in shas).encode()
-
-    def _run(cmd: Any, **kwargs: Any) -> _FakeCompleted:
-        return _FakeCompleted(out)
-
-    return _run
-
-
-def test_pick_next_sha_no_existing_picks_first(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(subprocess, "run", _fake_subprocess_run(["sha1111", "sha2222"]))
-    assert pick_next_sha(tmp_path, set()) == "sha1111"
-
-
-def test_pick_next_sha_skips_existing(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(
-        subprocess,
-        "run",
-        _fake_subprocess_run(["sha1111", "sha2222", "sha3333"]),
-    )
-    assert pick_next_sha(tmp_path, {"sha1111", "sha2222"}) == "sha3333"
-
-
-def test_pick_next_sha_all_existing_returns_none(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    monkeypatch.setattr(subprocess, "run", _fake_subprocess_run(["sha1111", "sha2222"]))
-    assert pick_next_sha(tmp_path, {"sha1111", "sha2222"}) is None
-
-
-def test_read_existing_shas_missing_file(tmp_path: Path) -> None:
-    assert read_existing_shas(tmp_path / "missing.txt") == set()
-
-
-def test_read_existing_shas_ignores_blank_lines(tmp_path: Path) -> None:
-    shas_path = tmp_path / "shas.txt"
-    shas_path.write_text("sha1111\n\nsha2222\n")
-    # Blank line collapses to empty string in the set; pick_next_sha filters
-    # those out via the non-empty guard.
-    assert "sha1111" in read_existing_shas(shas_path)
-    assert "sha2222" in read_existing_shas(shas_path)
-
-
-# === time_to_str / escape_ansi ===
-
-
-@pytest.mark.parametrize(
-    "value,expected",
-    [
-        (1.5, "1.500s"),
-        (1.0, "1.000s"),
-        (0.5, "500.000ms"),
-        (0.001, "1.000ms"),
-        (0.0005, "500.000us"),
-        (0.000001, "1.000us"),
-        (0.0000005, "500.000ns"),
-    ],
-)
-def test_time_to_str_positive(value: float, expected: str) -> None:
-    assert time_to_str(value) == expected
-
-
-def test_escape_ansi_passes_plain_text() -> None:
-    assert escape_ansi("hello world") == "hello world"
-
-
-def test_escape_ansi_strips_color_codes() -> None:
-    colored = "\x1b[31mhello\x1b[0m world"
-    assert escape_ansi(colored) == "hello world"
-
 
 # === get_commit_range / make_body ===
 
@@ -435,7 +346,7 @@ def test_build_parquet_writes_expected_columns(tmp_path: Path) -> None:
             {"bench.foo": [[1.0], [["1"]]]},
         )
 
-    build_parquet(input_path, output_path)
+    build_parquet(input_path, output_path=output_path)
 
     parquet_path = output_path / PARQUET_DIRNAME
     assert parquet_path.exists()
@@ -463,7 +374,7 @@ def test_build_parquet_appends_to_existing(tmp_path: Path) -> None:
             base + dt.timedelta(days=i),
             {"bench.foo": [[1.0], [["1"]]]},
         )
-    build_parquet(input_path, output_path)
+    build_parquet(input_path, output_path=output_path)
 
     for i in range(15, 25):
         _write_result(
@@ -472,143 +383,144 @@ def test_build_parquet_appends_to_existing(tmp_path: Path) -> None:
             base + dt.timedelta(days=i),
             {"bench.foo": [[1.0], [["1"]]]},
         )
-    build_parquet(input_path, output_path)
+    build_parquet(input_path, output_path=output_path)
 
     df = pd.read_parquet(output_path / PARQUET_DIRNAME)
     assert len(df) == 25
     assert df["sha"].nunique() == 25
 
 
-# === orphan_push_with_retry / cmd_claim integration ===
+def test_build_parquet_idempotent_on_rerun(tmp_path: Path) -> None:
+    input_path = tmp_path / "input"
+    output_path = tmp_path / "output"
+    output_path.mkdir()
+    _write_benchmarks(
+        input_path,
+        {"version": "1.0", "bench.foo": {"param_names": ["a"]}},
+    )
+    base = dt.datetime(2024, 1, 1)
+    for i in range(20):
+        _write_result(
+            input_path,
+            f"sha{i:03d}",
+            base + dt.timedelta(days=i),
+            {"bench.foo": [[1.0], [["1"]]]},
+        )
+
+    build_parquet(input_path, output_path=output_path)
+    build_parquet(input_path, output_path=output_path)
+
+    df = pd.read_parquet(output_path / PARQUET_DIRNAME)
+    assert len(df) == 20
+    assert df["sha"].nunique() == 20
 
 
-def _init_remote_and_storage(tmp_path: Path) -> tuple[Path, Path]:
-    """Create a bare 'remote' with an initial commit on `pandas_test`,
-    then clone it into `storage` so tests can push/refetch.
-    """
-    remote = tmp_path / "remote.git"
-    seed = tmp_path / "seed"
+def test_detect_regression_isolates_groups() -> None:
+    n = 60
+    dates = pd.date_range("2024-01-01", periods=n, freq="D")
+    step = [1.0] * (n // 2) + [10.0] * (n // 2)
+    flat = [1.0] * n
+    df = pd.DataFrame(
+        {
+            "name": ["bench.foo"] * (2 * n),
+            "params": ["a=1"] * n + ["a=2"] * n,
+            "date": list(dates) + list(dates),
+            "result": step + flat,
+        }
+    )
+    out = detect_regression(df, window_size=5)
+
+    flagged_a = out[(out["params"] == "a=1") & out["is_regression"]]
+    flagged_b = out[(out["params"] == "a=2") & out["is_regression"]]
+    assert len(flagged_a) >= 1
+    assert len(flagged_b) == 0
+
+
+# === make_envs_diff ===
+
+
+def test_make_envs_diff_includes_diff_output(tmp_path: Path) -> None:
+    (tmp_path / "envs").mkdir()
+    (tmp_path / "envs" / "prev.yml").write_text("pkg 1.0\n")
+    (tmp_path / "envs" / "curr.yml").write_text("pkg 2.0\n")
+    benchmarks = pd.DataFrame({"sha": ["prev", "curr"]})
+
+    result = make_envs_diff(input_path=tmp_path, benchmarks=benchmarks, sha="curr")
+
+    assert result.startswith("Environment changes from previous commit:\n```\n")
+    assert result.endswith("\n```")
+    assert "1.0" in result
+    assert "2.0" in result
+
+
+# === stage_asv_inputs ===
+
+
+def test_stage_asv_inputs_copies_metadata_when_no_compressed_files(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     storage = tmp_path / "storage"
+    asv = tmp_path / "asv"
+    asvrunner_storage = storage / "data" / "results" / "asvrunner"
+    asvrunner_storage.mkdir(parents=True)
+    (storage / "data" / "envs").mkdir(parents=True)
+    (storage / "data" / "results" / "benchmarks.json").write_text("{}")
+    (asvrunner_storage / "machine.json").write_text("{}")
 
-    subprocess.run(["git", "init", "--bare", str(remote)], check=True)
+    calls: list[list[str]] = []
 
-    seed.mkdir()
-    subprocess.run(["git", "init", "-b", "pandas_test", str(seed)], check=True)
-    subprocess.run(["git", "config", "user.name", "test"], cwd=seed, check=True)
-    subprocess.run(["git", "config", "user.email", "test@test"], cwd=seed, check=True)
-    (seed / "data").mkdir()
-    (seed / "data" / "shas.txt").write_text("")
-    subprocess.run(["git", "add", "-A"], cwd=seed, check=True)
-    subprocess.run(["git", "commit", "-m", "init"], cwd=seed, check=True)
-    subprocess.run(["git", "push", str(remote), "pandas_test"], cwd=seed, check=True)
+    def fake_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0)
 
-    subprocess.run(
-        ["git", "clone", "--branch", "pandas_test", str(remote), str(storage)],
-        check=True,
-    )
-    return remote, storage
+    monkeypatch.setattr(subprocess, "run", fake_run)
 
+    stage_asv_inputs(storage, asv=asv)
 
-def _init_pandas_repo(tmp_path: Path, n_commits: int = 2) -> tuple[Path, list[str]]:
-    """Create a tiny git repo with n synthetic commits and return its path
-    and the resulting SHAs (most-recent first)."""
-    repo = tmp_path / "pandas"
-    repo.mkdir()
-    subprocess.run(["git", "init", str(repo)], check=True)
-    subprocess.run(["git", "config", "user.name", "test"], cwd=repo, check=True)
-    subprocess.run(["git", "config", "user.email", "test@test"], cwd=repo, check=True)
-    shas: list[str] = []
-    for i in range(n_commits):
-        (repo / "f").write_text(str(i))
-        subprocess.run(["git", "add", "f"], cwd=repo, check=True)
-        subprocess.run(["git", "commit", "-m", f"commit {i}"], cwd=repo, check=True)
-        sha = subprocess.run(
-            ["git", "rev-parse", "HEAD"],
-            cwd=repo,
-            capture_output=True,
-            check=True,
-            text=True,
-        ).stdout.strip()
-        shas.append(sha)
-    return repo, list(reversed(shas))
+    assert (asv / "results" / "benchmarks.json").exists()
+    assert (asv / "results" / "asvrunner" / "machine.json").exists()
+    assert calls == []
 
 
-def test_orphan_push_with_retry_roundtrip(tmp_path: Path) -> None:
-    remote, storage = _init_remote_and_storage(tmp_path)
-
-    def modify(repo: Path) -> bool:
-        (repo / "data" / "shas.txt").write_text("hello\n")
-        return True
-
-    pushed = orphan_push_with_retry(storage, "pandas_test", "msg", modify)
-    assert pushed
-
-    verify = tmp_path / "verify"
-    subprocess.run(
-        ["git", "clone", "--branch", "pandas_test", str(remote), str(verify)],
-        check=True,
-    )
-    assert (verify / "data" / "shas.txt").read_text() == "hello\n"
-
-
-def test_orphan_push_with_retry_skip_when_modify_returns_false(
-    tmp_path: Path,
-) -> None:
-    _, storage = _init_remote_and_storage(tmp_path)
-
-    def modify(repo: Path) -> bool:
-        return False
-
-    pushed = orphan_push_with_retry(storage, "pandas_test", "msg", modify)
-    assert pushed is False
-
-
-def test_cmd_claim_picks_sha_and_pushes(
+def test_stage_asv_inputs_decompresses_zst_files(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    remote, storage = _init_remote_and_storage(tmp_path)
-    pandas_repo, shas = _init_pandas_repo(tmp_path, n_commits=2)
-    output_file = tmp_path / "github_output"
-    output_file.touch()
-    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
+    storage = tmp_path / "storage"
+    asv = tmp_path / "asv"
+    asvrunner_storage = storage / "data" / "results" / "asvrunner"
+    envs_storage = storage / "data" / "envs"
+    asvrunner_storage.mkdir(parents=True)
+    envs_storage.mkdir(parents=True)
+    (storage / "data" / "results" / "benchmarks.json").write_text("{}")
+    (asvrunner_storage / "machine.json").write_text("{}")
+    (asvrunner_storage / "abc.json.zst").write_bytes(b"")
+    (envs_storage / "abc.yml.zst").write_bytes(b"")
 
-    args = argparse.Namespace(
-        storage_dir=str(storage),
-        repo_dir=str(pandas_repo),
-        branch="pandas_test",
-    )
-    cmd_claim(args)
+    calls: list[list[str]] = []
 
-    out = output_file.read_text()
-    head_sha = shas[0]
-    assert f"sha={head_sha}" in out
-    assert "new_commit=yes" in out
+    def fake_run(cmd: list[str], **kwargs: Any) -> subprocess.CompletedProcess[bytes]:
+        calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0)
 
-    verify = tmp_path / "verify"
-    subprocess.run(
-        ["git", "clone", "--branch", "pandas_test", str(remote), str(verify)],
-        check=True,
-    )
-    assert (verify / "data" / "shas.txt").read_text().strip() == head_sha
+    monkeypatch.setattr(subprocess, "run", fake_run)
 
+    stage_asv_inputs(storage, asv=asv)
 
-def test_cmd_claim_no_new_commit_when_all_seen(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _, storage = _init_remote_and_storage(tmp_path)
-    pandas_repo, shas = _init_pandas_repo(tmp_path, n_commits=2)
-    (storage / "data" / "shas.txt").write_text("\n".join(shas) + "\n")
-    output_file = tmp_path / "github_output"
-    output_file.touch()
-    monkeypatch.setenv("GITHUB_OUTPUT", str(output_file))
-
-    args = argparse.Namespace(
-        storage_dir=str(storage),
-        repo_dir=str(pandas_repo),
-        branch="pandas_test",
-    )
-    cmd_claim(args)
-
-    out = output_file.read_text()
-    assert "sha=NONE" in out
-    assert "new_commit=no" in out
+    assert len(calls) == 2
+    json_call, yml_call = calls
+    assert json_call == [
+        "zstd",
+        "-d",
+        "-q",
+        "--output-dir-flat",
+        str(asv / "results" / "asvrunner"),
+        str(asvrunner_storage / "abc.json.zst"),
+    ]
+    assert yml_call == [
+        "zstd",
+        "-d",
+        "-q",
+        "--output-dir-flat",
+        str(envs_storage),
+        str(envs_storage / "abc.yml.zst"),
+    ]

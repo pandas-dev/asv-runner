@@ -40,7 +40,7 @@ jobs:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/
 
-      # ci/ scripts are run from the workflow's own ref (main on schedule,
+      # asv_runner scripts are run from the workflow's own ref (main on schedule,
       # whatever branch you choose on workflow_dispatch), not from whatever
       # stale copy lives on the storage branch.
       - name: Checkout asv-runner code
@@ -63,7 +63,7 @@ jobs:
 
       - name: Process and push
         run: |
-          python asv-runner-code/ci/run.py process \
+          PYTHONPATH=asv-runner-code python -m asv_runner process \
             --storage-dir=asv-runner \
             --asv-dir=asv_bench \
             --branch=$BRANCH_NAME

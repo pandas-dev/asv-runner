@@ -19,20 +19,14 @@ permissions:
   contents: read
 
 jobs:
-  # Pick the next un-benchmarked SHA and reserve it via shas.txt.
-  # Fast (~seconds) so concurrent claims rarely collide; the retry loop
-  # below covers the case when they do.
-  claim:
-    name: Claim SHA
+  run:
+    name: Run ASV and push results
     runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash -e {0}
     permissions:
       contents: write
-    outputs:
-      sha: ${{ steps.claim.outputs.sha }}
-      new_commit: ${{ steps.claim.outputs.new_commit }}
     steps:
       # In order to run pandas' actions, we have to checkout into the root directory.
       - name: Checkout pandas
@@ -58,171 +52,42 @@ jobs:
       - name: Claim next SHA
         id: claim
         run: |
-          claimed=false
-          new_commit=no
-          sha=NONE
-          for attempt in $(seq 1 5); do
-            cd asv-runner
-            git fetch origin ${BRANCH_NAME}
-            git checkout -B ${BRANCH_NAME} origin/${BRANCH_NAME}
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            cd ..
-            sha="$(python3 asv-runner-code/ci/find_commit_to_run.py --input-path=asv-runner/data/ --repo-path=.)"
-            if [ "$sha" = "NONE" ]; then
-              new_commit=no
-              claimed=true
-              break
-            fi
-
-            echo "$sha" >> asv-runner/data/shas.txt
-
-            cd asv-runner
-            EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
-            git checkout --orphan fresh
-            git add -A
-            git commit -m "Update shas.txt"
-            git branch -M fresh ${BRANCH_NAME}
-
-            if git push --force-with-lease=${BRANCH_NAME}:${EXPECTED} origin ${BRANCH_NAME}; then
-              new_commit=yes
-              claimed=true
-              cd ..
-              break
-            fi
-
-            cd ..
-            echo "Claim race lost on attempt $attempt; retrying"
-            sleep $((attempt * 5 + RANDOM % 10))
-          done
-
-          if [ "$claimed" = "false" ]; then
-            echo "Failed to claim a commit after retries" >&2
-            exit 1
-          fi
-
-          echo "new_commit=$new_commit" >> "$GITHUB_OUTPUT"
-          echo "sha=$sha" >> "$GITHUB_OUTPUT"
-
-  # Build pandas at the claimed SHA and run the ASV suite. No concurrency
-  # lock here — multiple workflow runs benchmark different SHAs in parallel.
-  # The new <sha>.json and <sha>.yml are zstd-compressed before upload so
-  # the merge job can drop them into the storage tree as-is.
-  benchmark:
-    name: Run benchmarks
-    needs: claim
-    if: needs.claim.outputs.new_commit == 'yes'
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash -e {0}
-    env:
-      SHA: ${{ needs.claim.outputs.sha }}
-    steps:
-      - name: Checkout pandas
-        uses: actions/checkout@v6
-        with:
-          repository: pandas-dev/pandas
-          fetch-depth: 0
+          python asv-runner-code/ci/run.py claim \
+            --storage-dir=asv-runner \
+            --repo-dir=. \
+            --branch=$BRANCH_NAME
 
       - name: Set up pixi
+        if: steps.claim.outputs.new_commit == 'yes'
         uses: ./.github/actions/setup-pixi
         with:
           environment: "asv"
 
       - name: Checkout target SHA
-        run: git checkout $SHA
+        if: steps.claim.outputs.new_commit == 'yes'
+        run: git checkout ${{ steps.claim.outputs.sha }}
 
       - name: Build pandas
+        if: steps.claim.outputs.new_commit == 'yes'
         run: pixi run --environment asv build-pandas --editable -Csetup-args="--werror"
 
       - name: Run ASV Benchmarks
+        if: steps.claim.outputs.new_commit == 'yes'
+        env:
+          SHA: ${{ steps.claim.outputs.sha }}
         run: |
           eval "$(pixi shell-hook -e asv)"
           cd asv_bench
           python -m asv machine --machine=asvrunner --yes
           python -m asv run --machine=asvrunner --python=same --set-commit-hash=$SHA --show-stderr
 
-      - name: Stage outputs for upload
+      - name: Push results
+        if: steps.claim.outputs.new_commit == 'yes'
+        env:
+          SHA: ${{ steps.claim.outputs.sha }}
         run: |
-          SHORT_SHA=$(git rev-parse --short=8 $SHA)
-          mkdir -p /tmp/upload/results/asvrunner /tmp/upload/envs
-          cp asv_bench/results/benchmarks.json /tmp/upload/results/
-          cp asv_bench/results/asvrunner/machine.json /tmp/upload/results/asvrunner/
-          cp asv_bench/results/asvrunner/${SHORT_SHA}-existing*.json /tmp/upload/results/asvrunner/${SHA}.json
-          pixi list -e asv --fields name,version > /tmp/upload/envs/${SHA}.yml
-          # Compress per-SHA files. benchmarks.json and machine.json stay
-          # uncompressed (small, overwritten each run, read directly).
-          zstd --rm -19 -q /tmp/upload/results/asvrunner/${SHA}.json
-          zstd --rm -19 -q /tmp/upload/envs/${SHA}.yml
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: asv-results-${{ needs.claim.outputs.sha }}
-          path: /tmp/upload/
-
-  # Drop this run's compressed files into the storage tree and orphan
-  # force-push. If a concurrent merge wins the race (lease fails), refetch
-  # — that winner's data is already on disk after the fetch — and redo.
-  merge:
-    name: Merge into storage branch
-    needs: [claim, benchmark]
-    if: needs.claim.outputs.new_commit == 'yes'
-    runs-on: ubuntu-24.04
-    defaults:
-      run:
-        shell: bash -e {0}
-    permissions:
-      contents: write
-    env:
-      SHA: ${{ needs.claim.outputs.sha }}
-    steps:
-      - name: Checkout asv-runner results branch
-        uses: actions/checkout@v6
-        with:
-          ref: ${{ env.BRANCH_NAME }}
-          path: asv-runner/
-
-      - name: Download benchmark output
-        uses: actions/download-artifact@v4
-        with:
-          name: asv-results-${{ needs.claim.outputs.sha }}
-          path: /tmp/new
-
-      - name: Merge results and push
-        run: |
-          for attempt in $(seq 1 5); do
-            cd asv-runner
-            git fetch origin ${BRANCH_NAME}
-            git checkout -B ${BRANCH_NAME} origin/${BRANCH_NAME}
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            # Drop in this run's new files.
-            mkdir -p data/results/asvrunner data/envs
-            cp /tmp/new/results/benchmarks.json data/results/
-            cp /tmp/new/results/asvrunner/machine.json data/results/asvrunner/
-            cp /tmp/new/results/asvrunner/${SHA}.json.zst data/results/asvrunner/
-            cp /tmp/new/envs/${SHA}.yml.zst data/envs/
-
-            EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
-            git checkout --orphan fresh
-            git add -A
-            git commit -m "Results"
-            git branch -M fresh ${BRANCH_NAME}
-
-            if git push --force-with-lease=${BRANCH_NAME}:${EXPECTED} origin ${BRANCH_NAME}; then
-              echo "Push succeeded on attempt $attempt"
-              cd ..
-              exit 0
-            fi
-
-            cd ..
-            echo "Merge race lost on attempt $attempt; retrying"
-            sleep $((attempt * 5 + RANDOM % 10))
-          done
-
-          echo "Failed to merge after 5 attempts" >&2
-          exit 1
+          python asv-runner-code/ci/run.py push \
+            --storage-dir=asv-runner \
+            --asv-dir=asv_bench \
+            --sha=$SHA \
+            --branch=$BRANCH_NAME

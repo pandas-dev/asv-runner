@@ -53,83 +53,19 @@ jobs:
         with:
           python-version: "${{ env.PYTHON_VERSION }}"
 
-      - name: Install environment dependencies
-        run: pip install -U pip uv
-
-      - name: Install job dependencies
-        run: uv pip install --system asv pandas pyarrow
+      - name: Install dependencies
+        run: |
+          pip install -U pip uv
+          uv pip install --system asv pandas pyarrow
 
       - name: Show environment packages
         run: uv pip freeze
 
-      # Decompress per-SHA results into asv_bench/results/asvrunner/ where
-      # asv publish and process_results.py expect them. benchmarks.json
-      # and machine.json are stored uncompressed and copied as-is. Envs are
-      # decompressed in place under data/envs/ so make_issues.py can read
-      # <sha>.yml directly; the decompressed *.yml files are gitignored.
-      # Single batched zstd invocation per group amortizes process startup.
-      - name: Decompress results and envs
+      - name: Process and push
         run: |
-          mkdir -p asv_bench/results/asvrunner
-          cp asv-runner/data/results/benchmarks.json asv_bench/results/
-          cp asv-runner/data/results/asvrunner/machine.json asv_bench/results/asvrunner/
-          find asv-runner/data/results/asvrunner -name '*.json.zst' -print0 |
-            xargs -0 -r zstd -d -q --output-dir-flat asv_bench/results/asvrunner
-          find asv-runner/data/envs -name '*.yml.zst' -print0 |
-            xargs -0 -r zstd -d -q --output-dir-flat asv-runner/data/envs
-
-      - name: Publish ASV Benchmarks
-        run: cd asv_bench && asv publish
-
-      - name: Process ASV results
-        run: |
-          python asv-runner-code/ci/process_results.py --input-path=asv_bench/ --output-path=asv-runner/data
-          rm -rf asv-runner/docs
-          mv asv_bench/html/ asv-runner/docs
-
-      - name: Make issues for new regressions
-        run: python asv-runner-code/ci/make_issues.py --input-path=asv-runner/data
+          python asv-runner-code/ci/run.py process \
+            --storage-dir=asv-runner \
+            --asv-dir=asv_bench \
+            --branch=$BRANCH_NAME
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      # Save our parquet+docs, refetch the latest tree (a concurrent
-      # run_asvs merge may have added new <sha>.json.zst files while
-      # asv publish was running), restore our parquet+docs over the fresh
-      # tree, then orphan force-push. Retry on lease failure.
-      - name: Push results
-        run: |
-          SAVE=$(mktemp -d)
-          cp -r asv-runner/data/results.parquet "$SAVE/"
-          cp -r asv-runner/docs "$SAVE/"
-
-          for attempt in $(seq 1 5); do
-            cd asv-runner
-            git fetch origin ${BRANCH_NAME}
-            git checkout -B ${BRANCH_NAME} origin/${BRANCH_NAME}
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            # Restore our parquet+docs over the freshly fetched tree.
-            rm -rf data/results.parquet docs
-            cp -r "$SAVE/results.parquet" data/results.parquet
-            cp -r "$SAVE/docs" docs
-
-            EXPECTED=$(git rev-parse origin/${BRANCH_NAME})
-            git checkout --orphan fresh
-            git add -A
-            git commit -m "Results"
-            git branch -M fresh ${BRANCH_NAME}
-
-            if git push --force-with-lease=${BRANCH_NAME}:${EXPECTED} origin ${BRANCH_NAME}; then
-              echo "Push succeeded on attempt $attempt"
-              cd ..
-              exit 0
-            fi
-
-            cd ..
-            echo "Push race lost on attempt $attempt; retrying"
-            sleep $((attempt * 5 + RANDOM % 10))
-          done
-
-          echo "Failed to push after 5 attempts" >&2
-          exit 1

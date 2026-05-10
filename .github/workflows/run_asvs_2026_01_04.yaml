@@ -14,6 +14,9 @@ env:
   # This keeps the main branch clean and allows us to clear out
   # objects / history after being built up for long periods of time.
   BRANCH_NAME: pandas_2026_01_04
+  # Suppress cwd-on-sys.path so `python -m asv_runner` doesn't pick up the
+  # uncompiled pandas source checkout at the workspace root.
+  PYTHONSAFEPATH: "1"
 
 permissions:
   contents: read
@@ -41,7 +44,7 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           path: asv-runner/
 
-      # ci/ scripts are run from the workflow's own ref (main on schedule,
+      # asv_runner scripts are run from the workflow's own ref (main on schedule,
       # whatever branch you choose on workflow_dispatch), not from whatever
       # stale copy lives on the storage branch. The storage branch is data-only.
       - name: Checkout asv-runner code
@@ -52,7 +55,7 @@ jobs:
       - name: Claim next SHA
         id: claim
         run: |
-          python asv-runner-code/ci/run.py claim \
+          PYTHONPATH=asv-runner-code python -m asv_runner claim \
             --storage-dir=asv-runner \
             --repo-dir=. \
             --branch=$BRANCH_NAME
@@ -77,16 +80,16 @@ jobs:
           SHA: ${{ steps.claim.outputs.sha }}
         run: |
           eval "$(pixi shell-hook -e asv)"
-          cd asv_bench
-          python -m asv machine --machine=asvrunner --yes
-          python -m asv run --machine=asvrunner --python=same --set-commit-hash=$SHA --show-stderr
+          PYTHONPATH=asv-runner-code python -m asv_runner benchmark \
+            --asv-dir=asv_bench \
+            --sha=$SHA
 
       - name: Push results
         if: steps.claim.outputs.new_commit == 'yes'
         env:
           SHA: ${{ steps.claim.outputs.sha }}
         run: |
-          python asv-runner-code/ci/run.py push \
+          PYTHONPATH=asv-runner-code python -m asv_runner push \
             --storage-dir=asv-runner \
             --asv-dir=asv_bench \
             --sha=$SHA \

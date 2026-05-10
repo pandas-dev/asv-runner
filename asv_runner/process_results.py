@@ -1,23 +1,19 @@
-"""CI orchestration for asv-runner.
-
-Subcommands invoked from .github/workflows/*.yaml:
-  claim   - pick next pandas SHA, append to shas.txt, push storage branch
-  push    - stage asv outputs (zstd-compress per-sha files) and push to storage
-  process - decompress, asv publish, build parquet, raise issues, push
-"""
+"""Decompress, asv publish, build parquet, raise issues, push."""
 
 from __future__ import annotations
 
 import argparse
-import os
-import random
-import re
+import datetime as dt
+import itertools as it
+import json
 import shutil
 import subprocess
-import sys
+import tempfile
 import time
-from collections.abc import Callable
+import urllib.parse
 from pathlib import Path
+
+from asv_runner.util import execute, orphan_push_with_retry, time_to_str
 
 PARQUET_DIRNAME = "results.parquet"
 BASE_COLUMNS = ["date", "sha", "name", "params", "result", "added_date"]
@@ -29,235 +25,6 @@ DERIVED_COLUMNS = [
     "abs_change",
 ]
 GITHUB_ISSUE_LENGTH = 65000
-
-
-# === Generic helpers ===
-
-
-def execute(cmd: str, *, input: str | None = None) -> str:
-    print("Executing command")
-    print(f"`{cmd}`")
-    response = subprocess.run(
-        cmd,
-        shell=True,
-        capture_output=True,
-        check=False,
-        input=input,
-        text=True,
-    )
-    if response.returncode != 0:
-        raise ValueError(f"{response.stdout}\n\n{response.stderr}")
-    return response.stdout
-
-
-def git(args: list[str], *, cwd: Path, capture: bool = False) -> str:
-    if capture:
-        return subprocess.run(
-            ["git", *args],
-            cwd=cwd,
-            check=True,
-            capture_output=True,
-            text=True,
-        ).stdout
-    subprocess.run(["git", *args], cwd=cwd, check=True)
-    return ""
-
-
-def write_github_output(**kwargs: str) -> None:
-    output_file = os.environ.get("GITHUB_OUTPUT")
-    if not output_file:
-        for k, v in kwargs.items():
-            print(f"{k}={v}")
-        return
-    with open(output_file, "a") as f:
-        for k, v in kwargs.items():
-            f.write(f"{k}={v}\n")
-
-
-def time_to_str(x: float) -> str:
-    is_negative = x < 0.0
-    if x >= 1.0:
-        result = f"{x:0.3f}s"
-    elif x >= 0.001:
-        result = f"{x * 1000:0.3f}ms"
-    elif x >= 0.000001:
-        result = f"{x * (1000**2):0.3f}us"
-    else:
-        result = f"{x * (1000**3):0.3f}ns"
-    if is_negative:
-        result = "-" + result
-    return result
-
-
-def escape_ansi(line: str) -> str:
-    ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
-    return ansi_escape.sub("", line)
-
-
-def configure_git_user(repo: Path) -> None:
-    git(["config", "user.name", "github-actions[bot]"], cwd=repo)
-    git(
-        ["config", "user.email", "github-actions[bot]@users.noreply.github.com"],
-        cwd=repo,
-    )
-
-
-def orphan_push_with_retry(
-    repo: Path,
-    branch: str,
-    message: str,
-    modify_tree: Callable[[Path], bool],
-    attempts: int = 5,
-) -> bool:
-    """Fetch branch, let caller mutate the tree, then orphan + force-push.
-
-    modify_tree is called after each fetch with the repo path; return False
-    to abort (no push, no retries). On lease failure refetches and retries
-    with backoff. Returns True if pushed, False if modify_tree opted out.
-    """
-    for attempt in range(1, attempts + 1):
-        git(["fetch", "origin", branch], cwd=repo)
-        git(["checkout", "-B", branch, f"origin/{branch}"], cwd=repo)
-        configure_git_user(repo)
-
-        if not modify_tree(repo):
-            return False
-
-        expected = git(
-            ["rev-parse", f"origin/{branch}"], cwd=repo, capture=True
-        ).strip()
-        git(["checkout", "--orphan", "fresh"], cwd=repo)
-        git(["add", "-A"], cwd=repo)
-        git(["commit", "-m", message], cwd=repo)
-        git(["branch", "-M", "fresh", branch], cwd=repo)
-
-        result = subprocess.run(
-            [
-                "git",
-                "push",
-                f"--force-with-lease={branch}:{expected}",
-                "origin",
-                branch,
-            ],
-            cwd=repo,
-            check=False,
-        )
-        if result.returncode == 0:
-            return True
-
-        delay = attempt * 5 + random.randint(0, 9)
-        print(
-            f"Push race lost on attempt {attempt}; retrying in {delay}s",
-            file=sys.stderr,
-        )
-        time.sleep(delay)
-
-    raise RuntimeError(f"Failed to push to {branch} after {attempts} attempts")
-
-
-# === claim subcommand ===
-
-
-def read_existing_shas(shas_path: Path) -> set[str]:
-    if not shas_path.exists():
-        return set()
-    return {line.strip() for line in shas_path.read_text().splitlines()}
-
-
-def pick_next_sha(repo: Path, existing_shas: set[str]) -> str | None:
-    response = subprocess.run(
-        ["git", "log", "-40", "--oneline", "--no-abbrev-commit"],
-        cwd=repo,
-        capture_output=True,
-        check=True,
-    )
-    recent_shas = [
-        line[: line.find(" ")] for line in response.stdout.decode().strip().split("\n")
-    ]
-    for sha in recent_shas:
-        if sha and sha not in existing_shas:
-            return sha
-    return None
-
-
-def cmd_claim(args: argparse.Namespace) -> None:
-    storage = Path(args.storage_dir)
-    repo = Path(args.repo_dir)
-    shas_path = storage / "data" / "shas.txt"
-
-    last_picked: list[str | None] = [None]
-
-    def modify_tree(_: Path) -> bool:
-        existing = read_existing_shas(shas_path)
-        sha = pick_next_sha(repo, existing)
-        if sha is None:
-            last_picked[0] = None
-            return False
-        with shas_path.open("a") as f:
-            f.write(f"{sha}\n")
-        last_picked[0] = sha
-        return True
-
-    pushed = orphan_push_with_retry(
-        storage, args.branch, "Update shas.txt", modify_tree
-    )
-    if pushed:
-        assert last_picked[0] is not None
-        write_github_output(sha=last_picked[0], new_commit="yes")
-    else:
-        write_github_output(sha="NONE", new_commit="no")
-
-
-# === push subcommand ===
-
-
-def cmd_push(args: argparse.Namespace) -> None:
-    import tempfile
-
-    storage = Path(args.storage_dir)
-    asv = Path(args.asv_dir)
-    sha = args.sha
-    short_sha = sha[:8]
-
-    asv_results = asv / "results" / "asvrunner"
-    matches = list(asv_results.glob(f"{short_sha}-existing*.json"))
-    if not matches:
-        raise RuntimeError(f"No matching result file for short sha {short_sha}")
-    if len(matches) > 1:
-        raise RuntimeError(f"Multiple matches for short sha {short_sha}: {matches}")
-
-    benchmarks_json = asv / "results" / "benchmarks.json"
-    machine_json = asv_results / "machine.json"
-
-    workdir = Path(tempfile.mkdtemp())
-    sha_json = workdir / f"{sha}.json"
-    sha_yml = workdir / f"{sha}.yml"
-    shutil.copy(matches[0], sha_json)
-    with sha_yml.open("w") as f:
-        subprocess.run(
-            ["pixi", "list", "-e", "asv", "--fields", "name,version"],
-            stdout=f,
-            check=True,
-        )
-    subprocess.run(["zstd", "--rm", "-19", "-q", str(sha_json)], check=True)
-    subprocess.run(["zstd", "--rm", "-19", "-q", str(sha_yml)], check=True)
-    sha_json_zst = workdir / f"{sha}.json.zst"
-    sha_yml_zst = workdir / f"{sha}.yml.zst"
-
-    def modify_tree(repo: Path) -> bool:
-        data = repo / "data"
-        (data / "results" / "asvrunner").mkdir(parents=True, exist_ok=True)
-        (data / "envs").mkdir(parents=True, exist_ok=True)
-        shutil.copy(benchmarks_json, data / "results" / "benchmarks.json")
-        shutil.copy(machine_json, data / "results" / "asvrunner" / "machine.json")
-        shutil.copy(sha_json_zst, data / "results" / "asvrunner" / f"{sha}.json.zst")
-        shutil.copy(sha_yml_zst, data / "envs" / f"{sha}.yml.zst")
-        return True
-
-    orphan_push_with_retry(storage, args.branch, "Results", modify_tree)
-
-
-# === process subcommand ===
 
 
 def detect_regression(data, window_size: int = 21):
@@ -304,10 +71,6 @@ def load_existing(parquet_path: Path):
 
 
 def build_new_rows(input_path: Path, skip_shas: set[str], added_date: str):
-    import datetime as dt
-    import itertools as it
-    import json
-
     import pandas as pd
     import pyarrow as pa
 
@@ -363,8 +126,6 @@ def build_new_rows(input_path: Path, skip_shas: set[str], added_date: str):
 
 
 def build_parquet(input_path: Path, output_path: Path) -> None:
-    import datetime as dt
-
     import pandas as pd
 
     parquet_path = output_path / PARQUET_DIRNAME
@@ -373,7 +134,7 @@ def build_parquet(input_path: Path, output_path: Path) -> None:
         set(existing["sha"].dropna().unique()) if existing is not None else set()
     )
     today = dt.datetime.now(dt.timezone.utc).date().isoformat()
-    new_rows = build_new_rows(input_path, skip_shas, today)
+    new_rows = build_new_rows(input_path, skip_shas=skip_shas, added_date=today)
 
     if existing is not None:
         existing_base = existing.drop(
@@ -410,8 +171,6 @@ def make_body(
     sha: str,
     shorten: bool = False,
 ) -> str:
-    import urllib.parse
-
     body = f"[Commit Range]({base_url + commit_range})\n\n"
     body += (
         "Subsequent benchmarks may have skipped some commits. The link"
@@ -445,10 +204,12 @@ def make_body(
     return body
 
 
-def make_envs_diff(*, input_path: Path, benchmarks, sha: str) -> str:
-    prev_sha = benchmarks["sha"][benchmarks["sha"].eq(sha).shift(-1)].iloc[0]
-    curr_env = input_path / "envs" / f"{sha}.yml"
-    prev_env = input_path / "envs" / f"{prev_sha}.yml"
+def make_envs_diff(*, envs_dir: Path, benchmarks, sha: str) -> str:
+    prev_sha = benchmarks["sha"][
+        benchmarks["sha"].eq(sha).shift(-1, fill_value=False)
+    ].iloc[0]
+    curr_env = envs_dir / f"{sha}.yml"
+    prev_env = envs_dir / f"{prev_sha}.yml"
     result = subprocess.run(
         ["diff", str(prev_env), str(curr_env)],
         capture_output=True,
@@ -457,7 +218,7 @@ def make_envs_diff(*, input_path: Path, benchmarks, sha: str) -> str:
     return f"Environment changes from previous commit:\n```\n{result}\n```"
 
 
-def raise_issues(input_path: Path) -> None:
+def raise_issues(input_path: Path, envs_dir: Path) -> None:
     import pandas as pd
 
     benchmarks = pd.read_parquet(input_path / "results.parquet")
@@ -508,9 +269,7 @@ def raise_issues(input_path: Path) -> None:
         issue_url = execute(cmd, input=body)
 
         issue_number = issue_url[issue_url.rfind("/") + 1 :].strip()
-        envs_diff = make_envs_diff(
-            input_path=input_path, benchmarks=benchmarks, sha=sha
-        )
+        envs_diff = make_envs_diff(envs_dir=envs_dir, benchmarks=benchmarks, sha=sha)
         if len(envs_diff) >= GITHUB_ISSUE_LENGTH:
             envs_diff = envs_diff[:GITHUB_ISSUE_LENGTH]
             envs_diff += "\n```\n\nWARNING: Body has been clipped due to length."
@@ -522,13 +281,15 @@ def raise_issues(input_path: Path) -> None:
         execute(cmd, input=envs_diff)
 
 
-def cmd_process(args: argparse.Namespace) -> None:
-    import tempfile
+def stage_asv_inputs(storage: Path, asv: Path) -> Path:
+    """Rehydrate the asv tree from compressed per-sha files in storage.
 
-    storage = Path(args.storage_dir)
-    asv = Path(args.asv_dir)
+    Decompresses env yml files into an ephemeral directory (returned) rather
+    than back into storage, so they don't end up in the orphan-pushed commit.
+    """
     asvrunner = asv / "results" / "asvrunner"
     asvrunner.mkdir(parents=True, exist_ok=True)
+    envs_dir = Path(tempfile.mkdtemp(prefix="asv-runner-envs-"))
 
     shutil.copy(
         storage / "data" / "results" / "benchmarks.json",
@@ -559,16 +320,24 @@ def cmd_process(args: argparse.Namespace) -> None:
                 "-d",
                 "-q",
                 "--output-dir-flat",
-                str(storage / "data" / "envs"),
+                str(envs_dir),
                 *(str(p) for p in yml_zsts),
             ],
             check=True,
         )
+    return envs_dir
+
+
+def run(args: argparse.Namespace) -> None:
+    storage = Path(args.storage_dir)
+    asv = Path(args.asv_dir)
+
+    envs_dir = stage_asv_inputs(storage, asv=asv)
 
     subprocess.run(["asv", "publish"], cwd=asv, check=True)
 
     build_parquet(input_path=asv, output_path=storage / "data")
-    raise_issues(input_path=storage / "data")
+    raise_issues(input_path=storage / "data", envs_dir=envs_dir)
 
     save = Path(tempfile.mkdtemp())
     shutil.copytree(storage / "data" / "results.parquet", save / "results.parquet")
@@ -585,38 +354,9 @@ def cmd_process(args: argparse.Namespace) -> None:
         shutil.copytree(save / "docs", docs_dir)
         return True
 
-    orphan_push_with_retry(storage, args.branch, "Results", modify_tree)
-
-
-# === entry point ===
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(description="CI orchestration for asv-runner")
-    sub = parser.add_subparsers(dest="cmd", required=True)
-
-    p = sub.add_parser("claim")
-    p.add_argument("--storage-dir", required=True)
-    p.add_argument("--repo-dir", required=True)
-    p.add_argument("--branch", required=True)
-    p.set_defaults(func=cmd_claim)
-
-    p = sub.add_parser("push")
-    p.add_argument("--storage-dir", required=True)
-    p.add_argument("--asv-dir", required=True)
-    p.add_argument("--sha", required=True)
-    p.add_argument("--branch", required=True)
-    p.set_defaults(func=cmd_push)
-
-    p = sub.add_parser("process")
-    p.add_argument("--storage-dir", required=True)
-    p.add_argument("--asv-dir", required=True)
-    p.add_argument("--branch", required=True)
-    p.set_defaults(func=cmd_process)
-
-    args = parser.parse_args()
-    args.func(args)
-
-
-if __name__ == "__main__":
-    main()
+    orphan_push_with_retry(
+        storage,
+        branch=args.branch,
+        message="Results",
+        modify_tree=modify_tree,
+    )

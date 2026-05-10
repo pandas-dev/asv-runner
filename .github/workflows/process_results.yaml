@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        shell: bash -el {0}
+        shell: bash -e {0}
     permissions:
       contents: write
       issues: write
@@ -40,26 +40,13 @@ jobs:
           ref: "${{ env.BRANCH_NAME }}"
           path: asv-runner/
 
-      # ci/ scripts are run from main, not from whatever stale copy lives
-      # on the storage branch.
-      - name: Checkout asv-runner main branch
+      # ci/ scripts are run from the workflow's own ref (main on schedule,
+      # whatever branch you choose on workflow_dispatch), not from whatever
+      # stale copy lives on the storage branch.
+      - name: Checkout asv-runner code
         uses: actions/checkout@v6
         with:
-          ref: main
           path: asv-runner-code/
-
-      # Migrate from legacy loose uncompressed JSON/YAML files to per-file
-      # zstd. Idempotent.
-      - name: Migrate legacy storage layout
-        run: |
-          if [ -d asv-runner/data/results/asvrunner ]; then
-            find asv-runner/data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-          fi
-          if [ -d asv-runner/data/envs ]; then
-            find asv-runner/data/envs -name '*.yml' -print0 |
-              xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-          fi
 
       - name: Setup Python
         uses: actions/setup-python@v6
@@ -121,17 +108,6 @@ jobs:
             git checkout -B ${BRANCH_NAME} origin/${BRANCH_NAME}
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            # Migrate from legacy loose uncompressed files to per-file zstd.
-            # Idempotent.
-            if [ -d data/results/asvrunner ]; then
-              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-            fi
-            if [ -d data/envs ]; then
-              find data/envs -name '*.yml' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-            fi
 
             # Restore our parquet+docs over the freshly fetched tree.
             rm -rf data/results.parquet docs

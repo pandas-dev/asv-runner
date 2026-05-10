@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        shell: bash -el {0}
+        shell: bash -e {0}
     permissions:
       contents: write
     outputs:
@@ -47,12 +47,12 @@ jobs:
           ref: ${{ env.BRANCH_NAME }}
           path: asv-runner/
 
-      # ci/ scripts are run from main, not from whatever stale copy lives
-      # on the storage branch. The storage branch is data-only.
-      - name: Checkout asv-runner main branch
+      # ci/ scripts are run from the workflow's own ref (main on schedule,
+      # whatever branch you choose on workflow_dispatch), not from whatever
+      # stale copy lives on the storage branch. The storage branch is data-only.
+      - name: Checkout asv-runner code
         uses: actions/checkout@v6
         with:
-          ref: main
           path: asv-runner-code/
 
       - name: Claim next SHA
@@ -67,19 +67,6 @@ jobs:
             git checkout -B ${BRANCH_NAME} origin/${BRANCH_NAME}
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            # Migrate from legacy loose uncompressed JSON/YAML files to
-            # per-file zstd. Idempotent: subsequent runs find no *.json
-            # (besides machine.json, excluded) or *.yml and the find
-            # produces no input.
-            if [ -d data/results/asvrunner ]; then
-              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-            fi
-            if [ -d data/envs ]; then
-              find data/envs -name '*.yml' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-            fi
 
             cd ..
             sha="$(python3 asv-runner-code/ci/find_commit_to_run.py --input-path=asv-runner/data/ --repo-path=.)"
@@ -129,7 +116,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        shell: bash -el {0}
+        shell: bash -e {0}
     env:
       SHA: ${{ needs.claim.outputs.sha }}
     steps:
@@ -186,7 +173,7 @@ jobs:
     runs-on: ubuntu-24.04
     defaults:
       run:
-        shell: bash -el {0}
+        shell: bash -e {0}
     permissions:
       contents: write
     env:
@@ -212,17 +199,6 @@ jobs:
             git checkout -B ${BRANCH_NAME} origin/${BRANCH_NAME}
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-
-            # Migrate from legacy loose uncompressed files to per-file zstd.
-            # Idempotent.
-            if [ -d data/results/asvrunner ]; then
-              find data/results/asvrunner -name '*.json' ! -name 'machine.json' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-            fi
-            if [ -d data/envs ]; then
-              find data/envs -name '*.yml' -print0 |
-                xargs -0 -r -P 4 -n 50 zstd --rm -19 -q
-            fi
 
             # Drop in this run's new files.
             mkdir -p data/results/asvrunner data/envs

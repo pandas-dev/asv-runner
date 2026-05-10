@@ -14,6 +14,9 @@ env:
   # This keeps the main branch clean and allows us to clear out
   # objects / history after being built up for long periods of time.
   BRANCH_NAME: pandas_2026_01_04
+  # Suppress cwd-on-sys.path so `python -m asv_runner` doesn't pick up the
+  # uncompiled pandas source checkout at the workspace root.
+  PYTHONSAFEPATH: "1"
 
 permissions:
   contents: read

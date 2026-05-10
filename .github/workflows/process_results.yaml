@@ -13,6 +13,10 @@ env:
   # objects / history after being built up for long periods of time.
   BRANCH_NAME: pandas_2026_01_04
   PYTHON_VERSION: 3.12
+  # Workspace root contains the pandas source checkout at ./pandas/. Without
+  # this, `python -m asv_runner` would prepend cwd to sys.path and `import
+  # pandas` would resolve to the uncompiled source tree instead of the wheel.
+  PYTHONSAFEPATH: "1"
 
 permissions:
   contents: read

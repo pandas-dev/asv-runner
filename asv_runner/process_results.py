@@ -204,12 +204,12 @@ def make_body(
     return body
 
 
-def make_envs_diff(*, input_path: Path, benchmarks, sha: str) -> str:
+def make_envs_diff(*, envs_dir: Path, benchmarks, sha: str) -> str:
     prev_sha = benchmarks["sha"][
         benchmarks["sha"].eq(sha).shift(-1, fill_value=False)
     ].iloc[0]
-    curr_env = input_path / "envs" / f"{sha}.yml"
-    prev_env = input_path / "envs" / f"{prev_sha}.yml"
+    curr_env = envs_dir / f"{sha}.yml"
+    prev_env = envs_dir / f"{prev_sha}.yml"
     result = subprocess.run(
         ["diff", str(prev_env), str(curr_env)],
         capture_output=True,
@@ -218,7 +218,7 @@ def make_envs_diff(*, input_path: Path, benchmarks, sha: str) -> str:
     return f"Environment changes from previous commit:\n```\n{result}\n```"
 
 
-def raise_issues(input_path: Path) -> None:
+def raise_issues(input_path: Path, envs_dir: Path) -> None:
     import pandas as pd
 
     benchmarks = pd.read_parquet(input_path / "results.parquet")
@@ -269,9 +269,7 @@ def raise_issues(input_path: Path) -> None:
         issue_url = execute(cmd, input=body)
 
         issue_number = issue_url[issue_url.rfind("/") + 1 :].strip()
-        envs_diff = make_envs_diff(
-            input_path=input_path, benchmarks=benchmarks, sha=sha
-        )
+        envs_diff = make_envs_diff(envs_dir=envs_dir, benchmarks=benchmarks, sha=sha)
         if len(envs_diff) >= GITHUB_ISSUE_LENGTH:
             envs_diff = envs_diff[:GITHUB_ISSUE_LENGTH]
             envs_diff += "\n```\n\nWARNING: Body has been clipped due to length."
@@ -283,10 +281,15 @@ def raise_issues(input_path: Path) -> None:
         execute(cmd, input=envs_diff)
 
 
-def stage_asv_inputs(storage: Path, asv: Path) -> None:
-    """Rehydrate the asv tree from compressed per-sha files in storage."""
+def stage_asv_inputs(storage: Path, asv: Path) -> Path:
+    """Rehydrate the asv tree from compressed per-sha files in storage.
+
+    Decompresses env yml files into an ephemeral directory (returned) rather
+    than back into storage, so they don't end up in the orphan-pushed commit.
+    """
     asvrunner = asv / "results" / "asvrunner"
     asvrunner.mkdir(parents=True, exist_ok=True)
+    envs_dir = Path(tempfile.mkdtemp(prefix="asv-runner-envs-"))
 
     shutil.copy(
         storage / "data" / "results" / "benchmarks.json",
@@ -317,23 +320,24 @@ def stage_asv_inputs(storage: Path, asv: Path) -> None:
                 "-d",
                 "-q",
                 "--output-dir-flat",
-                str(storage / "data" / "envs"),
+                str(envs_dir),
                 *(str(p) for p in yml_zsts),
             ],
             check=True,
         )
+    return envs_dir
 
 
 def run(args: argparse.Namespace) -> None:
     storage = Path(args.storage_dir)
     asv = Path(args.asv_dir)
 
-    stage_asv_inputs(storage, asv=asv)
+    envs_dir = stage_asv_inputs(storage, asv=asv)
 
     subprocess.run(["asv", "publish"], cwd=asv, check=True)
 
     build_parquet(input_path=asv, output_path=storage / "data")
-    raise_issues(input_path=storage / "data")
+    raise_issues(input_path=storage / "data", envs_dir=envs_dir)
 
     save = Path(tempfile.mkdtemp())
     shutil.copytree(storage / "data" / "results.parquet", save / "results.parquet")

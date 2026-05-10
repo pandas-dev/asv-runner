@@ -440,12 +440,13 @@ def test_detect_regression_isolates_groups() -> None:
 
 
 def test_make_envs_diff_includes_diff_output(tmp_path: Path) -> None:
-    (tmp_path / "envs").mkdir()
-    (tmp_path / "envs" / "prev.yml").write_text("pkg 1.0\n")
-    (tmp_path / "envs" / "curr.yml").write_text("pkg 2.0\n")
+    envs_dir = tmp_path / "envs"
+    envs_dir.mkdir()
+    (envs_dir / "prev.yml").write_text("pkg 1.0\n")
+    (envs_dir / "curr.yml").write_text("pkg 2.0\n")
     benchmarks = pd.DataFrame({"sha": ["prev", "curr"]})
 
-    result = make_envs_diff(input_path=tmp_path, benchmarks=benchmarks, sha="curr")
+    result = make_envs_diff(envs_dir=envs_dir, benchmarks=benchmarks, sha="curr")
 
     assert result.startswith("Environment changes from previous commit:\n```\n")
     assert result.endswith("\n```")
@@ -475,11 +476,12 @@ def test_stage_asv_inputs_copies_metadata_when_no_compressed_files(
 
     monkeypatch.setattr(subprocess, "run", fake_run)
 
-    stage_asv_inputs(storage, asv=asv)
+    envs_dir = stage_asv_inputs(storage, asv=asv)
 
     assert (asv / "results" / "benchmarks.json").exists()
     assert (asv / "results" / "asvrunner" / "machine.json").exists()
     assert calls == []
+    assert envs_dir.is_dir()
 
 
 def test_stage_asv_inputs_decompresses_zst_files(
@@ -504,7 +506,7 @@ def test_stage_asv_inputs_decompresses_zst_files(
 
     monkeypatch.setattr(subprocess, "run", fake_run)
 
-    stage_asv_inputs(storage, asv=asv)
+    envs_dir = stage_asv_inputs(storage, asv=asv)
 
     assert len(calls) == 2
     json_call, yml_call = calls
@@ -521,6 +523,9 @@ def test_stage_asv_inputs_decompresses_zst_files(
         "-d",
         "-q",
         "--output-dir-flat",
-        str(envs_storage),
+        str(envs_dir),
         str(envs_storage / "abc.yml.zst"),
     ]
+    # Ephemeral envs dir must not live under storage, or it'll get committed
+    # to the orphan branch by the subsequent push.
+    assert storage not in envs_dir.parents

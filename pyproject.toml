@@ -38,6 +38,9 @@ Tracker = "https://github.com/rhshadrach/asv-runner/issues"
 requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["asv_runner"]
+
 [project.optional-dependencies]
 lint = ["pre-commit"]
 test = ["pytest"]

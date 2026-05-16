@@ -60,7 +60,6 @@ def _regression_frame() -> pd.DataFrame:
 
 def test_make_body_includes_commit_range_link() -> None:
     body = make_body(
-        base_url="https://github.com/pandas-dev/pandas/compare/",
         commit_range="aaa...bbb",
         benchmarks=_regression_frame(),
         sha="abc123",
@@ -72,7 +71,6 @@ def test_make_body_includes_commit_range_link() -> None:
 
 def test_make_body_only_includes_target_sha_regressions() -> None:
     body = make_body(
-        base_url="https://github.com/pandas-dev/pandas/compare/",
         commit_range="aaa...bbb",
         benchmarks=_regression_frame(),
         sha="abc123",
@@ -84,7 +82,6 @@ def test_make_body_only_includes_target_sha_regressions() -> None:
 
 def test_make_body_renders_param_sublist_for_nonempty_params() -> None:
     body = make_body(
-        base_url="https://github.com/pandas-dev/pandas/compare/",
         commit_range="aaa...bbb",
         benchmarks=_regression_frame(),
         sha="abc123",
@@ -97,7 +94,6 @@ def test_make_body_renders_param_sublist_for_nonempty_params() -> None:
 
 def test_make_body_inlines_severity_when_params_empty() -> None:
     body = make_body(
-        base_url="https://github.com/pandas-dev/pandas/compare/",
         commit_range="aaa...bbb",
         benchmarks=_regression_frame(),
         sha="abc123",
@@ -111,13 +107,11 @@ def test_make_body_inlines_severity_when_params_empty() -> None:
 
 def test_make_body_shorten_collapses_param_sublist() -> None:
     full = make_body(
-        base_url="https://github.com/pandas-dev/pandas/compare/",
         commit_range="aaa...bbb",
         benchmarks=_regression_frame(),
         sha="abc123",
     )
     short = make_body(
-        base_url="https://github.com/pandas-dev/pandas/compare/",
         commit_range="aaa...bbb",
         benchmarks=_regression_frame(),
         sha="abc123",
@@ -126,6 +120,34 @@ def test_make_body_shorten_collapses_param_sublist() -> None:
     assert len(short) < len(full)
     assert "   - [ ]" not in short
     assert "10.000% (500.000ms)" in short
+
+
+def test_make_body_with_pr_info_links_pr_and_pings_author_and_approvers() -> None:
+    body = make_body(
+        commit_range="aaa...bbb",
+        benchmarks=_regression_frame(),
+        sha="abc123",
+        pr_info={
+            "number": 1234,
+            "author": "alice",
+            "approvers": ["bob", "carol"],
+        },
+    )
+    assert "[PR #1234](https://github.com/pandas-dev/pandas/pull/1234)" in body
+    assert "cc @alice @bob @carol" in body
+    assert "[Commit Range]" not in body
+    assert "Subsequent benchmarks may have skipped" not in body
+    assert "bench.foo" in body
+
+
+def test_make_body_with_pr_info_no_approvers_only_pings_author() -> None:
+    body = make_body(
+        commit_range="aaa...bbb",
+        benchmarks=_regression_frame(),
+        sha="abc123",
+        pr_info={"number": 1234, "author": "alice", "approvers": []},
+    )
+    assert "cc @alice\n" in body
 
 
 def test_make_body_excludes_non_regression_rows() -> None:
@@ -140,7 +162,6 @@ def test_make_body_excludes_non_regression_rows() -> None:
         }
     )
     body = make_body(
-        base_url="https://example.com/",
         commit_range="x...y",
         benchmarks=df,
         sha="abc",

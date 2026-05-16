@@ -25,6 +25,7 @@ DERIVED_COLUMNS = [
     "abs_change",
 ]
 GITHUB_ISSUE_LENGTH = 65000
+COMPARE_URL_BASE = "https://github.com/pandas-dev/pandas/compare/"
 
 
 def detect_regression(data, window_size: int = 21):
@@ -164,20 +165,59 @@ def get_commit_range(*, benchmarks, sha: str) -> str:
     return f"{prev_sha}...{sha}"
 
 
+def fetch_pr_info(*, commit_range: str, sha: str) -> dict | None:
+    """Return PR metadata when commit_range contains exactly one commit.
+
+    Returns dict with keys {number, author, approvers}, or None when the range
+    spans more than one commit or no PR is associated with sha.
+    """
+    cmd = f'gh api "repos/pandas-dev/pandas/compare/{commit_range}"'
+    compare = json.loads(execute(cmd))
+    if compare.get("ahead_by") != 1:
+        return None
+
+    cmd = f'gh api "repos/pandas-dev/pandas/commits/{sha}/pulls"'
+    prs = json.loads(execute(cmd))
+    if not prs:
+        return None
+    pr = prs[0]
+    number = pr["number"]
+    author = (pr.get("user") or {}).get("login")
+    if not author:
+        return None
+
+    cmd = f'gh api "repos/pandas-dev/pandas/pulls/{number}/reviews"'
+    reviews = json.loads(execute(cmd))
+    approvers: set[str] = set()
+    for review in reviews:
+        if review.get("state") != "APPROVED":
+            continue
+        login = (review.get("user") or {}).get("login")
+        if login and login != author:
+            approvers.add(login)
+    return {"number": number, "author": author, "approvers": sorted(approvers)}
+
+
 def make_body(
-    base_url: str,
     commit_range: str,
     benchmarks,
     sha: str,
+    pr_info: dict | None = None,
     shorten: bool = False,
 ) -> str:
-    body = f"[Commit Range]({base_url + commit_range})\n\n"
-    body += (
-        "Subsequent benchmarks may have skipped some commits. The link"
-        " above lists the commits that are"
-        " between the two benchmark runs where the regression was identified."
-        "\n\n"
-    )
+    if pr_info is not None:
+        pr_url = f"https://github.com/pandas-dev/pandas/pull/{pr_info['number']}"
+        body = f"[PR #{pr_info['number']}]({pr_url})\n\n"
+        mentions = [f"@{pr_info['author']}", *(f"@{a}" for a in pr_info["approvers"])]
+        body += f"cc {' '.join(mentions)}\n\n"
+    else:
+        body = f"[Commit Range]({COMPARE_URL_BASE + commit_range})\n\n"
+        body += (
+            "Subsequent benchmarks may have skipped some commits. The link"
+            " above lists the commits that are"
+            " between the two benchmark runs where the regression was identified."
+            "\n\n"
+        )
 
     regressions = benchmarks[benchmarks["sha"].eq(sha) & benchmarks["is_regression"]]
     prev_benchmark = ""
@@ -239,21 +279,21 @@ def raise_issues(input_path: Path, envs_dir: Path) -> None:
             continue
 
         title = f"Commit {sha}"
-        base_url = "https://github.com/pandas-dev/pandas/compare/"
         commit_range = get_commit_range(benchmarks=benchmarks, sha=sha)
+        pr_info = fetch_pr_info(commit_range=commit_range, sha=sha)
 
         body = make_body(
-            base_url=base_url,
             commit_range=commit_range,
             benchmarks=benchmarks,
             sha=sha,
+            pr_info=pr_info,
         )
         if len(body) >= GITHUB_ISSUE_LENGTH:
             body = make_body(
-                base_url=base_url,
                 commit_range=commit_range,
                 benchmarks=benchmarks,
                 sha=sha,
+                pr_info=pr_info,
                 shorten=True,
             )
         if len(body) >= GITHUB_ISSUE_LENGTH:

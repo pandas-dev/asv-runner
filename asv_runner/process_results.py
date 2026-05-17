@@ -100,6 +100,15 @@ def build_new_rows(input_path: Path, skip_shas: set[str], added_date: str):
         columns = results["result_columns"]
         timestamp = dt.datetime.fromtimestamp(results["date"] / 1000)
         for name, benchmark in results["results"].items():
+            if name not in benchmark_to_param_names:
+                # benchmarks.json reflects only the latest benchmarked commit;
+                # older or concurrently-pushed result files can reference names
+                # that have since been renamed or removed in pandas.
+                print(
+                    f"Skipping {name!r} for {commit_hash}: "
+                    "not in current benchmarks.json."
+                )
+                continue
             data = dict(zip(columns, benchmark))
             result = data["result"]
             param_names = benchmark_to_param_names[name]

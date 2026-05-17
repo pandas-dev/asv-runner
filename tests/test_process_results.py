@@ -289,6 +289,29 @@ def test_build_new_rows_respects_skip_shas(tmp_path: Path) -> None:
     assert set(df["sha"]) == {"keepme"}
 
 
+def test_build_new_rows_skips_benchmarks_missing_from_benchmarks_json(
+    tmp_path: Path,
+) -> None:
+    _write_benchmarks(
+        tmp_path,
+        {"version": "1.0", "bench.known": {"param_names": ["a"]}},
+    )
+    _write_result(
+        tmp_path,
+        "deadbeef",
+        dt.datetime(2024, 1, 1),
+        {
+            "bench.known": [[1.0], [["1"]]],
+            "bench.renamed_away": [[2.0], [["1"]]],
+        },
+    )
+
+    df = build_new_rows(tmp_path, skip_shas=set(), added_date="2024-01-02")
+
+    assert set(df["name"]) == {"bench.known"}
+    assert len(df) == 1
+
+
 def test_build_new_rows_empty_when_no_result_files(tmp_path: Path) -> None:
     _write_benchmarks(
         tmp_path,

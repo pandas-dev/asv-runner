@@ -23,7 +23,7 @@ from asv_runner.util import execute, orphan_push_with_retry, write_github_output
 LOOKBACK_COMMITS = 40
 # GitHub kills a job after 6 hours, so a lease older than this with no
 # results is guaranteed to belong to a dead run.
-CLAIM_TTL = timedelta(hours=7)
+CLAIM_TTL = timedelta(hours=24)
 MAX_ATTEMPTS = 3
 FAILURE_ISSUE_TITLE = "Benchmark run failures"
 EPOCH = datetime.fromtimestamp(0, tz=timezone.utc)

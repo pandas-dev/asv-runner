@@ -47,6 +47,7 @@ def test_run_invokes_asv_machine_then_asv_run(
         "--machine=asvrunner",
         "--python=same",
         "--set-commit-hash=abc123",
+        "--launch-method=forkserver",
         "--show-stderr",
     ]
     assert run_kwargs["cwd"] == tmp_path

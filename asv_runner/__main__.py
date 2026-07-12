@@ -1,7 +1,7 @@
 """CLI entry point for asv_runner.
 
 Subcommands invoked from .github/workflows/*.yaml:
-  claim     - pick next pandas SHA, append to shas.txt, push storage branch
+  claim     - lease next pandas SHA (new or stale retry), update shas.txt, push
   benchmark - run asv machine + asv run for a target SHA
   push      - stage asv outputs (zstd-compress per-sha files) and push to storage
   process   - decompress, asv publish, build parquet, raise issues, push

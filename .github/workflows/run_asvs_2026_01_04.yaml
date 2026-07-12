@@ -30,6 +30,8 @@ jobs:
         shell: bash -e {0}
     permissions:
       contents: write
+      # claim reports dead runs (expired leases) on a tracking issue.
+      issues: write
     steps:
       # In order to run pandas' actions, we have to checkout into the root directory.
       - name: Checkout pandas
@@ -54,6 +56,8 @@ jobs:
 
       - name: Claim next SHA
         id: claim
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PYTHONPATH=asv-runner-code python -m asv_runner claim \
             --storage-dir=asv-runner \

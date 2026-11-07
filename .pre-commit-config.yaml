@@ -1,0 +1,60 @@
+minimum_pre_commit_version: 2.15.0
+exclude: ^LICENSES/
+# reserve "manual" for relatively slow hooks which we still want to run in CI
+default_stages: [
+  pre-commit,
+  pre-merge-commit,
+  pre-push,
+  prepare-commit-msg,
+  commit-msg,
+  post-checkout,
+  post-commit,
+  post-merge,
+  post-rewrite
+]
+ci:
+  autofix_prs: false
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: debug-statements
+      - id: end-of-file-fixer
+        exclude: \.txt$
+        stages: [ pre-commit, pre-merge-commit, pre-push, prepare-commit-msg, commit-msg,
+                  post-checkout, post-commit, post-merge, post-rewrite ]
+      - id: trailing-whitespace
+        stages: [ pre-commit, pre-merge-commit, pre-push, prepare-commit-msg, commit-msg,
+                  post-checkout, post-commit, post-merge, post-rewrite ]
+
+  - repo: https://github.com/charliermarsh/ruff-pre-commit
+    rev: v0.6.2
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.3.0
+    hooks:
+      - id: codespell
+        types_or: [python, rst, markdown]
+        additional_dependencies: [tomli]
+
+  - repo: local
+    hooks:
+      - id: mypy
+        # note: assumes python env is setup and activated
+        name: mypy
+        entry: mypy
+        language: system
+        pass_filenames: false
+        types: [python]
+        stages: [manual]
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.11.1
+    hooks:
+      - id: mypy
+        require_serial: true
+        verbose: true

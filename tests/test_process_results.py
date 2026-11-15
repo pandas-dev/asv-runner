@@ -6,7 +6,10 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
+import pandas._testing as tm
+import pyarrow as pa
 import pytest
 
 from asv_runner.process_results import (
@@ -17,10 +20,13 @@ from asv_runner.process_results import (
     build_parquet,
     detect_regression,
     get_commit_range,
-    load_existing,
     make_body,
     make_envs_diff,
+    read_rows,
+    read_sha_dates,
     stage_asv_inputs,
+    update_parquet,
+    write_rows,
 )
 
 # === get_commit_range / make_body ===
@@ -195,32 +201,6 @@ def _write_result(
         "results": results,
     }
     (asvrunner_dir / f"{sha}.json").write_text(json.dumps(payload))
-
-
-def test_load_existing_returns_none_when_missing(tmp_path: Path) -> None:
-    assert load_existing(tmp_path / "does-not-exist.parquet") is None
-
-
-def test_load_existing_normalizes_added_date_dtype(tmp_path: Path) -> None:
-    parquet_path = tmp_path / "results.parquet"
-    df = pd.DataFrame(
-        {
-            "sha": pd.array(["a", "b"], dtype="string[pyarrow]"),
-            "result": pd.array([1.0, 2.0], dtype="float64[pyarrow]"),
-            "added_date": ["2024-01-01", "2024-01-02"],
-        }
-    )
-    df.to_parquet(
-        parquet_path,
-        index=False,
-        partition_cols=["added_date"],
-        basename_template="part-{i}.parquet",
-    )
-
-    loaded = load_existing(parquet_path)
-
-    assert loaded is not None
-    assert str(loaded["added_date"].dtype) == "string"
 
 
 def test_build_new_rows_produces_expected_rows(tmp_path: Path) -> None:
@@ -478,6 +458,85 @@ def test_detect_regression_isolates_groups() -> None:
     flagged_b = out[(out["params"] == "a=2") & out["is_regression"]]
     assert len(flagged_a) >= 1
     assert len(flagged_b) == 0
+
+
+def _random_rows(n_shas: int, seed: int) -> pd.DataFrame:
+    rng = np.random.default_rng(seed)
+    dates = pd.date_range("2024-01-01", periods=n_shas, freq="D")
+    frames = []
+    series = [
+        *(("bench.a", f"x={i}", 0, 0.0) for i in range(100)),
+        *(("bench.b", f"x={i}", 0, 0.2) for i in range(100)),
+        ("bench.c", "", 0, 0.7),
+        ("bench.d", "", n_shas - 12, 0.0),
+    ]
+    for name, params, start, missing in series:
+        n = n_shas - start
+        steps = rng.random(n) < 0.08
+        result = np.where(steps, rng.choice([1.3, 1 / 1.3], n), 1.0).cumprod()
+        result[rng.random(n) < missing] = np.nan
+        frames.append(
+            pd.DataFrame(
+                {
+                    "date": dates[start:],
+                    "sha": [f"sha{i:04d}" for i in range(start, n_shas)],
+                    "name": name,
+                    "params": params,
+                    "result": result,
+                }
+            )
+        )
+    df = pd.concat(frames, ignore_index=True)
+    df["added_date"] = "2024-" + (df["date"].dt.month).astype(str).str.zfill(2)
+    return pd.DataFrame(
+        {
+            "name": pd.array(df["name"], dtype="string[pyarrow]"),
+            "params": pd.array(df["params"], dtype="string[pyarrow]"),
+            "result": pd.array(df["result"], dtype="float64[pyarrow]"),
+            "date": pd.array(df["date"], dtype=pd.ArrowDtype(pa.timestamp("us"))),
+            "sha": pd.array(df["sha"], dtype="string[pyarrow]"),
+            "added_date": pd.array(df["added_date"], dtype="string[pyarrow]"),
+        }
+    )
+
+
+@pytest.mark.parametrize("slack", [0, 50])
+@pytest.mark.parametrize("seed", [0, 12, 21])
+def test_update_parquet_matches_full_recompute(
+    tmp_path: Path, slack: int, seed: int
+) -> None:
+    window_size = 5
+    rows = _random_rows(n_shas=120, seed=seed)
+    new_shas = {
+        "sha0060",
+        "sha0061",
+        "sha0090",
+        *(f"sha{i:04d}" for i in range(115, 120)),
+    }
+    is_new = rows["sha"].isin(new_shas)
+    new_rows = rows[is_new].assign(added_date="2024-12-31")
+    all_rows = pd.concat([rows[~is_new], new_rows], ignore_index=True)
+
+    path = tmp_path / "incremental"
+    write_rows(detect_regression(rows[~is_new], window_size=window_size), path)
+    update_parquet(
+        path,
+        new_rows,
+        sha_dates=read_sha_dates(path),
+        window_size=window_size,
+        slack=slack,
+    )
+
+    expected_path = tmp_path / "full"
+    write_rows(detect_regression(all_rows, window_size=window_size), expected_path)
+
+    def load(p: Path) -> pd.DataFrame:
+        df = read_rows(p, filters=None)
+        return df.sort_values(["sha", "name", "params"]).reset_index(drop=True)
+
+    expected = load(expected_path)
+    assert expected["is_regression"].any()
+    tm.assert_frame_equal(load(path), expected, check_like=True)
 
 
 # === make_envs_diff ===

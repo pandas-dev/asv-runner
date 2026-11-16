@@ -1,11 +1,16 @@
-"""Lease the next pandas SHA to benchmark, update shas.txt, push storage branch.
+"""Lease the next pandas SHA to benchmark, update shas.txt, push the claims branch.
 
-Each line of shas.txt is a lease: ``<sha> <claimed_at> <attempts> [abandoned]``.
-A SHA is complete when its results file exists on the storage branch; a lease
-with no results whose age exceeds CLAIM_TTL belonged to a run that died
-(timeout, build failure, runner loss) and is retried up to MAX_ATTEMPTS times.
-Legacy bare-sha lines parse as expired leases with no attempts on record.
-Detected failures are reported as comments on a single tracking issue.
+Each line of shas.txt is a lease:
+``<sha> <claimed_at> <attempts> [abandoned|done]``. A run marks its lease
+``done`` once its results are uploaded (see ``complete``); a lease that is not
+done and whose age exceeds CLAIM_TTL belonged to a run that died (timeout,
+build failure, runner loss) and is retried up to MAX_ATTEMPTS times. Legacy
+bare-sha lines parse as expired leases with no attempts on record. Detected
+failures are reported as comments on a single tracking issue.
+
+The claims branch holds only ``data/shas.txt``. ``init_claims`` creates it
+from the old results branch, where a lease was complete when its result file
+existed.
 """
 
 from __future__ import annotations
@@ -35,6 +40,7 @@ class Claim:
     claimed_at: datetime
     attempts: int
     abandoned: bool = False
+    done: bool = False
 
     @classmethod
     def from_line(cls, line: str) -> Claim:
@@ -44,16 +50,20 @@ class Claim:
             # record. If its results exist it is complete; otherwise it is
             # eligible for retry.
             return cls(sha=parts[0], claimed_at=EPOCH, attempts=0)
+        status = parts[3] if len(parts) > 3 else ""
         return cls(
             sha=parts[0],
             claimed_at=datetime.fromisoformat(parts[1]),
             attempts=int(parts[2]),
-            abandoned=len(parts) > 3 and parts[3] == "abandoned",
+            abandoned=status == "abandoned",
+            done=status == "done",
         )
 
     def to_line(self) -> str:
         line = f"{self.sha} {self.claimed_at.isoformat()} {self.attempts}"
-        if self.abandoned:
+        if self.done:
+            line += " done"
+        elif self.abandoned:
             line += " abandoned"
         return line
 
@@ -72,8 +82,15 @@ def write_claims(shas_path: Path, claims: list[Claim]) -> None:
     shas_path.write_text("".join(f"{claim.to_line()}\n" for claim in claims))
 
 
-def has_results(storage: Path, sha: str) -> bool:
-    return (storage / "data" / "results" / "asvrunner" / f"{sha}.json.zst").exists()
+def init_claims(shas_text: str, result_shas: set[str]) -> list[Claim]:
+    """Leases from the old results branch's shas.txt, marking those whose
+    result file existed there as done."""
+    claims = [Claim.from_line(line) for line in shas_text.splitlines() if line.strip()]
+    for claim in claims:
+        if claim.sha in result_shas:
+            claim.done = True
+            claim.abandoned = False
+    return claims
 
 
 def pick_next_sha(repo: Path, existing_shas: set[str]) -> str | None:
@@ -153,7 +170,7 @@ def run(args: argparse.Namespace) -> None:
             # No fresh commit: spend the idle slot retrying the newest stale
             # lease, marking exhausted ones abandoned along the way.
             for claim in reversed(claims):
-                if claim.abandoned or has_results(tree, claim.sha):
+                if claim.abandoned or claim.done:
                     continue
                 if now - claim.claimed_at < CLAIM_TTL:
                     # A runner may still be working on it.
@@ -202,3 +219,51 @@ def run(args: argparse.Namespace) -> None:
             # Notification is best-effort; never fail the job (and thereby
             # waste the lease we just pushed) over it.
             print(f"Failed to post failure notification: {err}", file=sys.stderr)
+
+
+def complete(args: argparse.Namespace) -> None:
+    """Mark a lease done once its results are uploaded."""
+    storage = Path(args.storage_dir)
+    shas_path = storage / "data" / "shas.txt"
+
+    def modify_tree(tree: Path) -> bool:
+        claims = read_claims(shas_path)
+        for claim in claims:
+            if claim.sha == args.sha:
+                if claim.done:
+                    return False
+                claim.done = True
+                claim.abandoned = False
+                break
+        else:
+            # Benchmarked without a lease (e.g. a manual run): record it.
+            now = datetime.now(timezone.utc)
+            claims.append(Claim(sha=args.sha, claimed_at=now, attempts=1, done=True))
+        write_claims(shas_path, claims)
+        return True
+
+    orphan_push_with_retry(
+        storage,
+        branch=args.branch,
+        message=f"Mark {args.sha} done",
+        modify_tree=modify_tree,
+    )
+
+
+def init(args: argparse.Namespace) -> None:
+    """Write data/shas.txt for a new claims branch from the old results branch.
+
+    ``--shas`` is the old branch's data/shas.txt and ``--results`` lists the
+    old branch's result files (``git ls-tree --name-only`` output).
+    """
+    result_shas = {
+        Path(line).name.removesuffix(".json.zst")
+        for line in Path(args.results).read_text().splitlines()
+        if line.endswith(".json.zst")
+    }
+    claims = init_claims(Path(args.shas).read_text(), result_shas)
+    shas_path = Path(args.out) / "data" / "shas.txt"
+    shas_path.parent.mkdir(parents=True, exist_ok=True)
+    write_claims(shas_path, claims)
+    n_done = sum(claim.done for claim in claims)
+    print(f"Wrote {len(claims)} leases ({n_done} done) to {shas_path}.")

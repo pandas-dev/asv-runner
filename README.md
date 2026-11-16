@@ -4,7 +4,7 @@ This repository is utilized for running the ASV suite on each commit to the main
 
 Features:
 
-- Stores historic ASV results on non-default branches (e.g. `pandas_20250203`). Over time, historic results can become a significant size. By using non-default branches to store the results, we can create a new branch and then completely wipe the old branch from the repository's history.
+- Each hourly run uploads its results as a GitHub Actions artifact (`result-<sha>`, kept 90 days), and the nightly run stores them in Parquet on a non-default branch (`pandas_2026_01_04_v2`). Which commits have been claimed and benchmarked is tracked in `data/shas.txt` on the small `asv-claims` branch. Keeping data off the default branch lets a branch be replaced and its history wiped when it grows too large.
 - Publishes the results on https://pandas-dev.github.io/asv-runner/: a static site built nightly from the stored results, with charts per benchmark, recent regressions and improvements, a view per commit, and markers where a benchmark's code or the environment changed. Links to the site reproduce the exact chart (parameters, zoom, options).
 - Uses pandas' `setup-conda` and `build_pandas` GitHub actions directly. Any changes to the pandas build process will not necessitate any maintenance here.
 - Stores the environment on each run. The site and the regression issues show which packages changed between benchmarked commits.

@@ -9,10 +9,15 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # Result and env files are read from the branch the hourly benchmark runs
-  # push to; the Parquet store lives on its own branch.
-  INPUT_BRANCH: pandas_2026_01_04
+  # The hourly benchmark runs (run_asvs_*.yaml) upload their results as
+  # artifacts named result-<sha>; this workflow stores them in Parquet on
+  # STORE_BRANCH. CLAIMS_BRANCH holds the hourly runs' leases.
   STORE_BRANCH: pandas_2026_01_04_v2
+  CLAIMS_BRANCH: asv-claims
+  # Results were pushed to this branch before the artifacts; still read so none
+  # pushed shortly before the switch are missed. Remove once one nightly run
+  # after the switch has stored them.
+  INPUT_BRANCH: pandas_2026_01_04
   PYTHON_VERSION: "3.14"
   SITE_URL: https://pandas-dev.github.io/asv-runner/
 
@@ -29,6 +34,9 @@ jobs:
     permissions:
       contents: write # push the store branch
       issues: write
+      actions: read # download result artifacts
+    outputs:
+      site: ${{ steps.site.outputs.ready }}
     steps:
       - name: Checkout asv-runner code
         uses: actions/checkout@v6
@@ -69,6 +77,13 @@ jobs:
 
       - name: Install asv-runner
         run: pip install ./code
+
+      - name: Download new results
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python -m asv_runner fetch-results \
+            --store store/data --out input --repo "$GITHUB_REPOSITORY"
 
       - name: Update store
         run: |
@@ -119,9 +134,28 @@ jobs:
         with:
           path: site
 
+      - name: Mark the site ready
+        id: site
+        run: echo "ready=true" >> "$GITHUB_OUTPUT"
+
+      # Fails the job if a benchmarked commit's results never reached the store
+      # (its artifact expired or was never uploaded). Pages still deploys.
+      - name: Check for lost results
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if ! git ls-remote --exit-code --heads "$url" "$CLAIMS_BRANCH" > /dev/null; then
+            echo "$CLAIMS_BRANCH does not exist yet; nothing to check."
+            exit 0
+          fi
+          git clone --quiet --depth 1 --branch "$CLAIMS_BRANCH" "$url" claims
+          python -m asv_runner check-results --store store/data --claims claims/data/shas.txt
+
   deploy:
     name: Deploy Pages
     needs: process
+    if: ${{ !cancelled() && needs.process.outputs.site == 'true' }}
     runs-on: ubuntu-24.04
     permissions:
       pages: write

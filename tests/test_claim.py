@@ -16,6 +16,7 @@ from asv_runner.claim import (
     MAX_ATTEMPTS,
     Claim,
     find_failure_issue,
+    init_claims,
     notify_failures,
     pick_next_sha,
     read_claims,
@@ -159,12 +160,6 @@ def _init_pandas_repo(tmp_path: Path, n_commits: int = 2) -> tuple[Path, list[st
     return repo, list(reversed(shas))
 
 
-def _add_results(storage: Path, sha: str) -> None:
-    results = storage / "data" / "results" / "asvrunner"
-    results.mkdir(parents=True, exist_ok=True)
-    (results / f"{sha}.json.zst").write_text("")
-
-
 @pytest.fixture
 def notifications(monkeypatch: pytest.MonkeyPatch) -> list[str]:
     """Capture failure notifications instead of shelling out to gh."""
@@ -242,9 +237,9 @@ def test_cmd_claim_no_new_commit_when_all_complete(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch, notifications: list[str]
 ) -> None:
     _, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
-    (storage / "data" / "shas.txt").write_text("\n".join(reversed(shas)) + "\n")
-    for sha in shas:
-        _add_results(storage, sha)
+    (storage / "data" / "shas.txt").write_text(
+        "".join(f"{sha} {OLD_TS} 1 done\n" for sha in reversed(shas))
+    )
     cmd_claim(args)
 
     out = output_file.read_text()
@@ -258,8 +253,9 @@ def test_cmd_claim_retries_legacy_bare_sha_without_notifying(
 ) -> None:
     remote, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
     head_sha, second_sha = shas
-    (storage / "data" / "shas.txt").write_text(f"{second_sha}\n{head_sha}\n")
-    _add_results(storage, second_sha)
+    (storage / "data" / "shas.txt").write_text(
+        f"{second_sha} {OLD_TS} 0 done\n{head_sha}\n"
+    )
     cmd_claim(args)
 
     out = output_file.read_text()
@@ -278,8 +274,9 @@ def test_cmd_claim_retries_stale_lease_and_notifies(
 ) -> None:
     remote, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
     head_sha, second_sha = shas
-    (storage / "data" / "shas.txt").write_text(f"{second_sha}\n{head_sha} {OLD_TS} 1\n")
-    _add_results(storage, second_sha)
+    (storage / "data" / "shas.txt").write_text(
+        f"{second_sha} {OLD_TS} 0 done\n{head_sha} {OLD_TS} 1\n"
+    )
     cmd_claim(args)
 
     out = output_file.read_text()
@@ -299,8 +296,9 @@ def test_cmd_claim_skips_in_flight_lease(
     _, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
     head_sha, second_sha = shas
     now = datetime.now(timezone.utc).isoformat()
-    (storage / "data" / "shas.txt").write_text(f"{second_sha}\n{head_sha} {now} 1\n")
-    _add_results(storage, second_sha)
+    (storage / "data" / "shas.txt").write_text(
+        f"{second_sha} {OLD_TS} 0 done\n{head_sha} {now} 1\n"
+    )
     cmd_claim(args)
 
     out = output_file.read_text()
@@ -315,9 +313,8 @@ def test_cmd_claim_abandons_exhausted_lease_and_notifies(
     remote, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
     head_sha, second_sha = shas
     (storage / "data" / "shas.txt").write_text(
-        f"{second_sha}\n{head_sha} {OLD_TS} {MAX_ATTEMPTS}\n"
+        f"{second_sha} {OLD_TS} 0 done\n{head_sha} {OLD_TS} {MAX_ATTEMPTS}\n"
     )
-    _add_results(storage, second_sha)
     cmd_claim(args)
 
     out = output_file.read_text()
@@ -337,9 +334,8 @@ def test_cmd_claim_skips_abandoned_lease(
     _, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
     head_sha, second_sha = shas
     (storage / "data" / "shas.txt").write_text(
-        f"{second_sha}\n{head_sha} {OLD_TS} {MAX_ATTEMPTS} abandoned\n"
+        f"{second_sha} {OLD_TS} 0 done\n{head_sha} {OLD_TS} {MAX_ATTEMPTS} abandoned\n"
     )
-    _add_results(storage, second_sha)
     cmd_claim(args)
 
     out = output_file.read_text()
@@ -368,8 +364,9 @@ def test_cmd_claim_survives_notification_failure(
 ) -> None:
     _, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
     head_sha, second_sha = shas
-    (storage / "data" / "shas.txt").write_text(f"{second_sha}\n{head_sha} {OLD_TS} 1\n")
-    _add_results(storage, second_sha)
+    (storage / "data" / "shas.txt").write_text(
+        f"{second_sha} {OLD_TS} 0 done\n{head_sha} {OLD_TS} 1\n"
+    )
 
     def boom(events: list[str]) -> None:
         raise RuntimeError("gh unavailable")
@@ -437,3 +434,66 @@ def test_notify_failures_comments_on_existing_issue(
     cmd, body = calls[-1]
     assert cmd.startswith("gh issue comment 42")
     assert body == "- event one"
+
+
+# === done leases ===
+
+
+def test_claim_done_line_roundtrip() -> None:
+    line = f"sha1111 {OLD_TS} 2 done"
+    claim = Claim.from_line(line)
+    assert claim.done
+    assert not claim.abandoned
+    assert claim.to_line() == line
+
+
+def test_init_claims_marks_leases_with_results_done() -> None:
+    text = f"sha1111\nsha2222 {OLD_TS} 3 abandoned\nsha3333 {OLD_TS} 1\n"
+    claims = {c.sha: c for c in init_claims(text, {"sha1111", "sha2222"})}
+    assert claims["sha1111"].done
+    # Results arrived after the lease was given up on: it is complete.
+    assert claims["sha2222"].done
+    assert not claims["sha2222"].abandoned
+    assert not claims["sha3333"].done
+
+
+def test_init_reads_old_branch_listing(tmp_path: Path) -> None:
+    (tmp_path / "shas.txt").write_text("sha1111\nsha2222\n")
+    (tmp_path / "results.txt").write_text(
+        "data/results/asvrunner/machine.json\n"
+        "data/results/asvrunner/sha1111.json.zst\n"
+    )
+    claim_mod.init(
+        argparse.Namespace(
+            shas=str(tmp_path / "shas.txt"),
+            results=str(tmp_path / "results.txt"),
+            out=str(tmp_path / "claims"),
+        )
+    )
+    claims = read_claims(tmp_path / "claims" / "data" / "shas.txt")
+    assert [(c.sha, c.done) for c in claims] == [("sha1111", True), ("sha2222", False)]
+
+
+def test_complete_marks_lease_done_and_pushes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, notifications: list[str]
+) -> None:
+    remote, storage, shas, args, _ = _claim_scenario(tmp_path, monkeypatch)
+    head_sha, _ = shas
+    cmd_claim(args)
+    claim_mod.complete(
+        argparse.Namespace(storage_dir=str(storage), sha=head_sha, branch="pandas_test")
+    )
+    (pushed,) = _pushed_claims(tmp_path, remote)
+    assert pushed.sha == head_sha
+    assert pushed.done
+
+
+def test_done_lease_is_not_retried(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, notifications: list[str]
+) -> None:
+    _, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
+    (storage / "data" / "shas.txt").write_text(
+        "".join(f"{sha} {OLD_TS} 1 done\n" for sha in reversed(shas))
+    )
+    cmd_claim(args)
+    assert "new_commit=no" in output_file.read_text()

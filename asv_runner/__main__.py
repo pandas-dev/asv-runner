@@ -3,9 +3,12 @@
 Subcommands invoked from .github/workflows/*.yaml:
 
 Hourly benchmark run (run_asvs_*.yaml), standard library only:
-  claim     - lease next pandas SHA (new or stale retry), update shas.txt, push
-  benchmark - run asv machine + asv run for a target SHA
-  push      - stage asv outputs (zstd-compress per-sha files) and push to storage
+  claim       - lease next pandas SHA (new or stale retry), update shas.txt, push
+  benchmark   - run asv machine + asv run for a target SHA
+  stage       - zstd-compress the run's result and env files for upload as an
+                artifact
+  complete    - mark the SHA's lease done once its artifact is uploaded
+  init-claims - create the claims branch's shas.txt from the old results branch
 
 Nightly processing (process_results.yaml), needs the package's dependencies:
   update    - add new result files, env files, benchmark definitions, and commit
@@ -13,6 +16,8 @@ Nightly processing (process_results.yaml), needs the package's dependencies:
   verify    - rebuild every stored file and compare it to the originals
   site      - build the static benchmark site from the store
   issues    - open GitHub issues for new regressions (or write them to a file)
+  fetch-results - download result artifacts of commits not yet stored
+  check-results - fail if a completed lease's results were never stored
 """
 
 from __future__ import annotations
@@ -25,7 +30,7 @@ from pathlib import Path
 # The hourly benchmark run executes this module from a source checkout without
 # installing the package, so only standard-library modules are imported here;
 # the nightly commands import theirs when they run.
-from asv_runner import benchmark, claim, push_results
+from asv_runner import benchmark, claim, stage_results
 
 DEFAULT_SITE_URL = "https://pandas-dev.github.io/asv-runner/"
 
@@ -99,6 +104,18 @@ def _issues(args: argparse.Namespace) -> int:
     return 0
 
 
+def _fetch_results(args: argparse.Namespace) -> int:
+    from asv_runner import artifacts
+
+    return artifacts.fetch_cmd(args)
+
+
+def _check_results(args: argparse.Namespace) -> int:
+    from asv_runner import artifacts
+
+    return artifacts.check_cmd(args)
+
+
 def main() -> int | None:
     parser = argparse.ArgumentParser(description="CI orchestration for asv-runner")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -114,12 +131,27 @@ def main() -> int | None:
     p.add_argument("--sha", required=True)
     p.set_defaults(func=benchmark.run)
 
-    p = sub.add_parser("push")
-    p.add_argument("--storage-dir", required=True)
+    p = sub.add_parser("stage")
     p.add_argument("--asv-dir", required=True)
     p.add_argument("--sha", required=True)
+    p.add_argument("--out-dir", required=True)
+    p.set_defaults(func=stage_results.run)
+
+    p = sub.add_parser("complete")
+    p.add_argument(
+        "--storage-dir", required=True, help="Checkout of the claims branch."
+    )
+    p.add_argument("--sha", required=True)
     p.add_argument("--branch", required=True)
-    p.set_defaults(func=push_results.run)
+    p.set_defaults(func=claim.complete)
+
+    p = sub.add_parser("init-claims")
+    p.add_argument("--shas", required=True, help="The old branch's data/shas.txt.")
+    p.add_argument(
+        "--results", required=True, help="List of the old branch's result files."
+    )
+    p.add_argument("--out", required=True, help="Directory of the new claims branch.")
+    p.set_defaults(func=claim.init)
 
     for name, func in (("update", _update), ("verify", _verify)):
         p = sub.add_parser(name)
@@ -148,6 +180,17 @@ def main() -> int | None:
         "Read-only GitHub calls (duplicate search, PR info) still happen.",
     )
     p.set_defaults(func=_issues)
+
+    p = sub.add_parser("fetch-results")
+    p.add_argument("--store", required=True, help="Root of the Parquet store.")
+    p.add_argument("--out", required=True, help="Directory to extract results into.")
+    p.add_argument("--repo", required=True, help="OWNER/REPO holding the artifacts.")
+    p.set_defaults(func=_fetch_results)
+
+    p = sub.add_parser("check-results")
+    p.add_argument("--store", required=True, help="Root of the Parquet store.")
+    p.add_argument("--claims", required=True, help="The claims branch's shas.txt.")
+    p.set_defaults(func=_check_results)
 
     args = parser.parse_args()
     return args.func(args)

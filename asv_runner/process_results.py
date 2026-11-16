@@ -6,6 +6,7 @@ import argparse
 import datetime as dt
 import itertools as it
 import json
+import os
 import shutil
 import subprocess
 import tempfile
@@ -386,7 +387,13 @@ def run(args: argparse.Namespace) -> None:
     subprocess.run(["asv", "publish"], cwd=asv, check=True)
 
     build_parquet(input_path=asv, output_path=storage / "data")
-    raise_issues(input_path=storage / "data", envs_dir=envs_dir)
+    # The RAISE_ISSUES_FROM repository variable picks which pipeline opens
+    # issues while the old and new pipelines run side by side.
+    raise_from = os.environ.get("RAISE_ISSUES_FROM") or "old"
+    if raise_from == "old":
+        raise_issues(input_path=storage / "data", envs_dir=envs_dir)
+    else:
+        print(f"Not raising issues: RAISE_ISSUES_FROM={raise_from}")
 
     save = Path(tempfile.mkdtemp())
     shutil.copytree(storage / "data" / "results.parquet", save / "results.parquet")

@@ -1,0 +1,13 @@
+# Commits where benchmark results before and after must never be compared,
+# because how results are measured changed (benchmark tooling, compilers,
+# runner hardware), not pandas.
+#
+# Regression detection splits every series at these commits, as it does at a
+# change of a benchmark's code. The site draws a labelled line at each one.
+#
+# `sha` is the first benchmarked pandas commit measured the new way (the full
+# 40-character SHA). `reason` is shown on the site.
+
+[[break]]
+sha = "cae1cd626f89b8c1710789bdb0df249da6a8bba4"
+reason = "asv_runner 0.2.5 → 0.3.1 and gcc 14 → 15 (pandas #66793, pixi relock); ~5× slowdown across 2,237 benchmarks"

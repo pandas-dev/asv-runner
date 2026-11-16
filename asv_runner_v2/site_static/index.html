@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>pandas benchmarks</title>
+<link rel="stylesheet" href="uPlot.min.css">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<aside id="sidebar">
+  <h1><a href="#">pandas benchmarks</a></h1>
+  <input id="search" type="search" placeholder="Search benchmarks, a commit SHA or a PR number  ( / )" autocomplete="off">
+  <div id="search-commit"></div>
+  <div id="recent" hidden>
+    <h2>Recently viewed</h2>
+    <ul></ul>
+  </div>
+  <div id="tree"></div>
+</aside>
+<main id="main">
+  <section id="home">
+    <h2>pandas benchmarks</h2>
+    <p id="status"></p>
+    <p id="summary"></p>
+    <h3>Recent regressions</h3>
+    <p class="muted">Steps in the last 30 days, by commit, newest first. A change is detected once 10 later commits have been benchmarked.</p>
+    <div id="recent-regressions"></div>
+    <details id="recent-improvements">
+      <summary><h3>Recent improvements</h3></summary>
+      <div></div>
+    </details>
+    <div id="failing" hidden>
+      <h3>Failing benchmarks</h3>
+      <p class="muted">Every parameter combination failed at the latest benchmarked commit.</p>
+      <ul></ul>
+    </div>
+    <h3>Recent environment changes</h3>
+    <p class="muted">Changes to key packages and switches of environment tool. <label><input type="checkbox" id="home-env-all"> Include other packages</label></p>
+    <ul id="recent-envs"></ul>
+  </section>
+  <section id="commit" hidden>
+    <h2 id="commit-title"></h2>
+    <p id="commit-info"></p>
+    <div id="commit-env"></div>
+    <h3>Regressions at this commit</h3>
+    <div id="commit-regressions"></div>
+    <h3>Improvements at this commit</h3>
+    <div id="commit-improvements"></div>
+  </section>
+  <section id="bench" hidden>
+    <h2 id="bench-name"></h2>
+    <div id="chips"></div>
+    <div id="toolbar">
+      <label><input type="checkbox" id="opt-log"> Log scale</label>
+      <label><input type="checkbox" id="opt-order"> Commit order on x-axis</label>
+      <label><input type="checkbox" id="opt-env" checked> Environment changes</label>
+      <label><input type="checkbox" id="opt-env-all"> including non-key packages</label>
+      <button id="copy-link" type="button" title="The link reproduces this chart: parameters, hidden series, options, zoom and selected point">Copy link</button>
+      <span class="muted">Click a point to open its commit. Drag to zoom, double-click to reset.</span>
+      <span id="series-note"></span>
+    </div>
+    <div id="chart"></div>
+    <div id="point"></div>
+    <h3>Events</h3>
+    <ul id="events"></ul>
+  </section>
+</main>
+<script src="uPlot.iife.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

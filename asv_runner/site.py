@@ -26,9 +26,9 @@ from typing import Any
 
 import polars as pl
 
-from asv_runner_v2 import breaks as breaks_mod
-from asv_runner_v2 import regressions, series
-from asv_runner_v2.store import Store
+from asv_runner import breaks as breaks_mod
+from asv_runner import regressions, series
+from asv_runner.store import Store
 
 SIG_DIGITS = 5
 # Benchmarks with more series than this split their values into chunk files so

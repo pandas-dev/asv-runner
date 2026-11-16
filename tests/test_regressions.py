@@ -5,8 +5,42 @@ import pandas as pd
 import polars as pl
 import pytest
 
-from asv_runner.process_results import detect_regression
-from asv_runner_v2.regressions import flag
+from asv_runner.regressions import flag
+
+
+def detect_regression(data, window_size: int = 21):
+    """The pandas implementation this package replaced, kept as the reference
+    that ``flag`` must agree with when windows are not split."""
+    data = (
+        data[data["result"].notnull()]
+        .set_index(["name", "params", "date"])
+        .sort_index()
+    )
+    keys = ["name", "params"]
+    tol = 0.95
+
+    data["established_worst"] = (
+        data.groupby(keys, as_index=False)["result"]
+        .rolling(window_size, center=True)
+        .max()[["result"]]
+    )
+    data["established_best"] = (
+        data.groupby(keys, as_index=False)["result"]
+        .rolling(window_size, center=True)
+        .min()[["result"]]
+    )
+
+    mask = (
+        data["established_worst"].groupby(keys).shift(window_size)
+        < tol * data["established_best"]
+    )
+    mask = mask & ~mask.groupby(keys).shift(1, fill_value=False)
+    mask = mask.groupby(keys).shift(-(window_size - 1) // 2, fill_value=False)
+
+    data["is_regression"] = mask
+    data["pct_change"] = data.groupby(keys)["result"].pct_change()
+    data["abs_change"] = data["result"] - data.groupby(keys)["result"].shift(1)
+    return data.reset_index()
 
 
 def _random_series(seed: int, n: int = 300) -> list[float | None]:

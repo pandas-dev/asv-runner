@@ -14,7 +14,7 @@ from dataclasses import dataclass
 
 import polars as pl
 
-from asv_runner_v2.store import Store
+from asv_runner.store import Store
 
 
 def commits(store: Store) -> pl.DataFrame:

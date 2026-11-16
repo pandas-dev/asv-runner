@@ -5,8 +5,8 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from asv_runner_v2 import breaks
-from asv_runner_v2.regressions import flag
+from asv_runner import breaks
+from asv_runner.regressions import flag
 
 SHA = "c" * 40
 

@@ -14,7 +14,7 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">= 3.14"
 version = "0.0.1"
-dependencies = ["pandas", "polars", "pyarrow", "zstandard"]
+dependencies = ["polars", "pyarrow", "zstandard"]
 classifiers=[
     'Development Status :: 4 - Beta',
     'Programming Language :: Python',
@@ -35,14 +35,15 @@ requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["asv_runner", "asv_runner_v2"]
+packages = ["asv_runner"]
 
 [tool.setuptools.package-data]
-asv_runner_v2 = ["site_static/*", "breaks.toml"]
+asv_runner = ["site_static/*", "breaks.toml"]
 
 [project.optional-dependencies]
 lint = ["pre-commit"]
-test = ["pytest"]
+# pandas: the reference implementation in tests/test_regressions.py
+test = ["pandas", "pytest"]
 dev = ["asv_runner[lint, test]"]
 
 [tool.ruff.lint]

@@ -6,10 +6,10 @@ from typing import Any
 
 import pytest
 
-from asv_runner_v2 import series, site
-from asv_runner_v2.breaks import Break
-from asv_runner_v2.store import Store
-from tests.v2._helpers import (
+from asv_runner import series, site
+from asv_runner.breaks import Break
+from asv_runner.store import Store
+from tests._results_helpers import (
     PIXI_ENV,
     add_commit,
     make_result,

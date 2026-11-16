@@ -1,77 +1,135 @@
 name: Process ASV Results
 on:
-#  pull_request:
-#    branches:
-#      - main
   schedule:
     - cron: "20 3 * * *"
   workflow_dispatch:
 
+concurrency:
+  group: process-results
+  cancel-in-progress: false
+
 env:
-  # Results and other data are stored away from the main branch.
-  # This keeps the main branch clean and allows us to clear out
-  # objects / history after being built up for long periods of time.
-  BRANCH_NAME: pandas_2026_01_04
+  # Result and env files are read from the branch the hourly benchmark runs
+  # push to; the Parquet store lives on its own branch.
+  INPUT_BRANCH: pandas_2026_01_04
+  STORE_BRANCH: pandas_2026_01_04_v2
   PYTHON_VERSION: "3.14"
-  # Workspace root contains the pandas source checkout at ./pandas/. Without
-  # this, `python -m asv_runner` would prepend cwd to sys.path and `import
-  # pandas` would resolve to the uncompiled source tree instead of the wheel.
-  PYTHONSAFEPATH: "1"
+  SITE_URL: https://pandas-dev.github.io/asv-runner/
 
 permissions:
   contents: read
 
 jobs:
-  process-results:
-    name: Process ASV Results
+  process:
+    name: Update store, raise issues, build site
     runs-on: ubuntu-24.04
     defaults:
       run:
         shell: bash -e {0}
     permissions:
-      contents: write
+      contents: write # push the store branch
       issues: write
     steps:
-      - name: Checkout pandas
-        uses: actions/checkout@v6
-        with:
-          repository: pandas-dev/pandas
-          fetch-depth: 0
-
-      - name: Checkout asv-runner results branch
-        uses: actions/checkout@v6
-        with:
-          ref: "${{ env.BRANCH_NAME }}"
-          path: asv-runner/
-
-      # asv_runner scripts are run from the workflow's own ref (main on schedule,
-      # whatever branch you choose on workflow_dispatch), not from whatever
-      # stale copy lives on the storage branch.
       - name: Checkout asv-runner code
         uses: actions/checkout@v6
         with:
-          path: asv-runner-code/
+          path: code
+
+      - name: Checkout result and env files
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ env.INPUT_BRANCH }}
+          path: input
+          fetch-depth: 1
+          sparse-checkout: |
+            data/results
+            data/envs
+
+      - name: Checkout the store branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          if git ls-remote --exit-code --heads "$url" "$STORE_BRANCH" > /dev/null; then
+            git clone --quiet --depth 1 --branch "$STORE_BRANCH" "$url" store
+          else
+            echo "$STORE_BRANCH does not exist yet; starting an empty store."
+            git init --quiet -b "$STORE_BRANCH" store
+            git -C store remote add origin "$url"
+          fi
+
+      # Commit objects only (no trees or files): enough for commit titles.
+      - name: Clone pandas history
+        run: git clone --quiet --filter=tree:0 --no-checkout https://github.com/pandas-dev/pandas pandas
 
       - name: Setup Python
         uses: actions/setup-python@v6
         with:
-          python-version: "${{ env.PYTHON_VERSION }}"
+          python-version: ${{ env.PYTHON_VERSION }}
 
-      - name: Install dependencies
+      - name: Install asv-runner
+        run: pip install ./code
+
+      - name: Update store
         run: |
-          pip install -U pip uv
-          uv pip install --system asv pandas pyarrow
+          python -m asv_runner update \
+            --input input --store store/data --pandas-repo pandas --workers 4
 
-      - name: Show environment packages
-        run: uv pip freeze
-
-      - name: Process and push
-        run: |
-          PYTHONPATH=asv-runner-code python -m asv_runner process \
-            --storage-dir=asv-runner \
-            --asv-dir=asv_bench \
-            --branch=$BRANCH_NAME
+      - name: Raise issues
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # "old" (or unset): this workflow opens issues; "new": process_results_v2.yaml does.
-          RAISE_ISSUES_FROM: ${{ vars.RAISE_ISSUES_FROM }}
+          GH_TOKEN: ${{ github.token }}
+        run: python -m asv_runner issues --store store/data --site-url "$SITE_URL"
+
+      - name: Build site
+        run: python -m asv_runner site --store store/data --out site
+
+      # A single orphan commit, so the branch never accumulates history.
+      - name: Push store
+        working-directory: store
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          expected=$(git rev-parse --verify --quiet HEAD || true)
+          git checkout --quiet --orphan fresh
+          git add -A
+          git commit --quiet -m "Store"
+          git branch -M fresh "$STORE_BRANCH"
+          if [ -n "$expected" ]; then
+            git push --force-with-lease="$STORE_BRANCH:$expected" origin "$STORE_BRANCH"
+          else
+            git push origin "$STORE_BRANCH"
+          fi
+
+      # Issues opened while the site was served at /next/ link there; forward
+      # those links to the root, keeping the #... part that selects the chart.
+      - name: Redirect /next/
+        run: |
+          mkdir site/next
+          cat > site/next/index.html <<'EOF'
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>pandas benchmarks</title>
+          <script>location.replace("../" + location.hash);</script>
+          <noscript><meta http-equiv="refresh" content="0; url=../"></noscript>
+          <a href="../">pandas benchmarks</a>
+          EOF
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy Pages
+    needs: process
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Deploy
+        id: deploy
+        uses: actions/deploy-pages@v4

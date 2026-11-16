@@ -6,10 +6,10 @@ from pathlib import Path
 import polars as pl
 import pytest
 
-from asv_runner_v2 import store as store_mod
-from asv_runner_v2.store import FileTooLargeError, Store, week_key
-from asv_runner_v2.verify import verify
-from tests.v2._helpers import PIXI_ENV, add_commit, write_benchmark_defs
+from asv_runner import store as store_mod
+from asv_runner.store import FileTooLargeError, Store, week_key
+from asv_runner.verify import verify
+from tests._results_helpers import PIXI_ENV, add_commit, write_benchmark_defs
 
 # Commit dates in ms: two in ISO week 2026-W10, one in 2026-W12.
 WEEK10_A = 1772932225000  # 2026-03-08 (Sunday, still W10)

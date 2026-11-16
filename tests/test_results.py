@@ -5,8 +5,8 @@ import json
 import pyarrow as pa
 import pytest
 
-from asv_runner_v2 import results
-from tests.v2._helpers import make_result
+from asv_runner import results
+from tests._results_helpers import make_result
 
 
 def _round_trip(d: dict) -> dict:

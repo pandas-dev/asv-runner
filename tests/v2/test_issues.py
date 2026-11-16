@@ -21,8 +21,8 @@ class FakeGitHub(issues.GitHub):
         self.existing = existing
         self.pr = pr
 
-    def issue_exists(self, needle: str) -> bool:
-        return needle in self.existing
+    def issue_titles(self, sha: str) -> list[str]:
+        return [t for t in self.existing if sha in t]
 
     def pr_info(self, prev_sha: str, sha: str) -> dict | None:
         return self.pr
@@ -125,3 +125,24 @@ def test_dry_run_file(tmp_path: Path) -> None:
     assert text.startswith("# Issues the new pipeline would open (1)")
     assert f"## Commit {_sha(40)}" in text
     assert "[Commit Range](https://github.com/pandas-dev/pandas/compare/" in text
+
+
+@pytest.mark.parametrize(
+    ("titles", "expected"),
+    [
+        ([f"Commit {'a' * 40}"], True),
+        ([f"Commit {'a' * 40}: 120 benchmarks slower; check"], True),
+        # Another commit's issue that only mentions this SHA does not count.
+        ([f"Commit {'b' * 40}"], False),
+        ([f"Re: Commit {'a' * 40}"], False),
+        ([], False),
+    ],
+)
+def test_is_issue_for(titles: list[str], expected: bool) -> None:
+    assert issues.is_issue_for("a" * 40, titles) is expected
+
+
+def test_mass_change_issue_counts_as_existing(tmp_path: Path) -> None:
+    store = _store(tmp_path, slow=NAMES[:1])
+    gh = FakeGitHub(existing={f"Commit {_sha(40)}: 6 benchmarks slower; check"})
+    assert issues.raise_issues(store, gh, breaks=[], pause=0) == []

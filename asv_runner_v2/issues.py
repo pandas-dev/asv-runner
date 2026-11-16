@@ -73,8 +73,25 @@ class GitHub:
     def api(self, path: str) -> Any:
         return json.loads(self._gh(["api", path]))
 
-    def issue_exists(self, needle: str) -> bool:
-        return self._gh(["search", "issues", "--repo", REPO, needle]).strip() != ""
+    def issue_titles(self, sha: str) -> list[str]:
+        """Titles of issues whose title mentions ``sha``."""
+        out = self._gh(
+            [
+                *("search", "issues", "--repo", REPO, "--match", "title", sha),
+                *("--json", "title", "--jq", ".[].title"),
+            ]
+        )
+        return out.splitlines()
+
+    def issue_exists(self, sha: str) -> bool:
+        """Whether an issue for ``sha`` was already opened.
+
+        Matches the title exactly. A full-text search also matches other
+        issues that mention the SHA: issue #110 (for 027ea1edde) mentions
+        b935209dd0 in a comment, which kept b935209dd0 from ever getting an
+        issue.
+        """
+        return is_issue_for(sha, self.issue_titles(sha))
 
     def create_issue(
         self, title: str, body: str, comment: str | None, labels: list[str]
@@ -126,6 +143,12 @@ class GitHub:
         if len(files) >= 300:  # the compare API returns at most 300 files
             return None
         return [f["filename"] for f in files]
+
+
+def is_issue_for(sha: str, titles: list[str]) -> bool:
+    """``Commit <sha>``, or a mass-change issue's ``Commit <sha>: ...``."""
+    title = f"Commit {sha}"
+    return any(t == title or t.startswith(f"{title}:") for t in titles)
 
 
 # -- issue content ------------------------------------------------------------
@@ -416,7 +439,7 @@ def raise_issues(
     raised = []
     for i in latest:
         sha, prev_sha = shas[i], shas[i - 1]
-        if github.issue_exists(f"Commit {sha}"):
+        if github.issue_exists(sha):
             continue
         time.sleep(pause)
         ctx = Context(

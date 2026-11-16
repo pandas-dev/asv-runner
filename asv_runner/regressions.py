@@ -27,8 +27,8 @@ from __future__ import annotations
 
 import polars as pl
 
-from asv_runner_v2 import breaks as breaks_mod
-from asv_runner_v2.series import Series
+from asv_runner import breaks as breaks_mod
+from asv_runner.series import Series
 
 WINDOW = 21
 TOL = 0.95

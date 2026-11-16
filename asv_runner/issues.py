@@ -22,9 +22,9 @@ from typing import Any
 
 import polars as pl
 
-from asv_runner_v2 import breaks as breaks_mod
-from asv_runner_v2 import regressions, series, site
-from asv_runner_v2.store import Store
+from asv_runner import breaks as breaks_mod
+from asv_runner import regressions, series, site
+from asv_runner.store import Store
 
 REPO = "pandas-dev/asv-runner"
 PANDAS = "pandas-dev/pandas"
@@ -332,7 +332,7 @@ def mass_change_body(
         body += f"- {label}: {', '.join(links)}\n"
     body += f"\n[All changes at this commit]({site_url}#commit/{ctx.sha})\n\n"
 
-    breaks_url = f"https://github.com/{REPO}/blob/main/asv_runner_v2/breaks.toml"
+    breaks_url = f"https://github.com/{REPO}/blob/main/asv_runner/breaks.toml"
     body += (
         "**What to do**\n"
         "1. If the cause is the environment or tooling (most likely when a row in "

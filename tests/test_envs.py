@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from asv_runner_v2 import envs
-from tests.v2._helpers import CONDA_ENV, PIXI_ENV
+from asv_runner import envs
+from tests._results_helpers import CONDA_ENV, PIXI_ENV
 
 
 def _rows(out: dict[str, list]) -> list[tuple]:

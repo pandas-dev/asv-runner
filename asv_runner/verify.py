@@ -8,7 +8,7 @@ from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from asv_runner_v2.store import ENV_SUFFIX, RESULT_SUFFIX, Store, read_zst
+from asv_runner.store import ENV_SUFFIX, RESULT_SUFFIX, Store, read_zst
 
 
 @dataclass

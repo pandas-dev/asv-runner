@@ -41,7 +41,7 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import zstandard
 
-from asv_runner_v2 import envs, results
+from asv_runner import envs, results
 
 # GitHub rejects files over 100 MB and warns over 50 MB.
 MAX_FILE_BYTES = 50_000_000

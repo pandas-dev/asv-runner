@@ -6,9 +6,14 @@ from pathlib import Path
 
 import pytest
 
-from asv_runner_v2 import issues
-from asv_runner_v2.store import Store
-from tests.v2._helpers import CONDA_ENV, make_result, write_benchmark_defs, write_zst
+from asv_runner import issues
+from asv_runner.store import Store
+from tests._results_helpers import (
+    CONDA_ENV,
+    make_result,
+    write_benchmark_defs,
+    write_zst,
+)
 
 DAY_MS = 86_400_000
 START = 1772845825000

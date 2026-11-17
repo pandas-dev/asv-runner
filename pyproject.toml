@@ -56,7 +56,6 @@ select = [
     "B",   # flake8-bugbear
     "C4",  # flake8-comprehensions
     # "D",   # pydocstyle
-    "DOC", # pydoclint
     "E",   # pycodestyle - error
     "F",   # Pyflakes
     "FA",  # flake8-future-annotations
@@ -86,4 +85,5 @@ ignore = [
     "PLR0913",  # Too many arguments
     "PLR0915",  # Too many statements
     "PLR0917",  # Too many positional arguments
+    "PLC0415",  # import should be at the top-level of a file
 ]

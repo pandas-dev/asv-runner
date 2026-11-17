@@ -171,5 +171,5 @@ def test_detections_in_site_data(tmp_path: Path) -> None:
 
     graph = _load(out / "data" / "graphs" / "a.time_x.json")
     assert graph["series"] == [["1"], ["2"]]
-    [[i, sid, kind, step]] = graph["detections"]
+    [[i, sid, kind, _step]] = graph["detections"]
     assert (i, sid, kind) == (40, 0, 1)

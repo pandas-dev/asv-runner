@@ -84,14 +84,16 @@ def _parse_pixi_list(text: str) -> list[tuple[str, str, str, str | None]]:
     # a space, so slice at the header's column starts instead of splitting.
     starts = [m.start() for m in re.finditer(r"\S+", lines[0])]
     header = [
-        lines[0][i:j].strip().lower() for i, j in zip(starts, [*starts[1:], None])
+        lines[0][i:j].strip().lower()
+        for i, j in zip(starts, [*starts[1:], None], strict=True)
     ]
     if header[:2] != ["name", "version"]:
         raise EnvFormatError(f"Unexpected pixi list header: {lines[0]!r}")
     rows: list[tuple[str, str, str, str | None]] = []
     for line in lines[1:]:
         fields = {
-            h: line[i:j].strip() for h, i, j in zip(header, starts, [*starts[1:], None])
+            h: line[i:j].strip()
+            for h, i, j in zip(header, starts, [*starts[1:], None], strict=True)
         }
         kind = fields.get("kind", "conda")
         rows.append(

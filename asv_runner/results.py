@@ -108,7 +108,7 @@ def _fits_decimal(values: Any, n: int) -> bool:
 
 def commit_date(d: dict) -> dt.datetime:
     """Commit date of a result file; asv stores it as milliseconds since epoch."""
-    return dt.datetime.fromtimestamp(d["date"] / 1000, tz=dt.timezone.utc)
+    return dt.datetime.fromtimestamp(d["date"] / 1000, tz=dt.UTC)
 
 
 def parse(d: dict) -> tuple[dict, dict[str, list], dict[str, list]]:
@@ -122,7 +122,8 @@ def parse(d: dict) -> tuple[dict, dict[str, list], dict[str, list]]:
     bench: dict[str, list] = {f.name: [] for f in BENCHMARKS_SCHEMA}
     values: dict[str, list] = {f.name: [] for f in VALUES_SCHEMA}
     for position, (name, row_values) in enumerate(d["results"].items()):
-        row = dict(zip(cols, row_values))
+        # asv drops trailing Nones from a row, so it can be shorter than cols.
+        row = dict(zip(cols, row_values, strict=False))
         params = row.get("params")
         n = n_combos(params)
         native: dict[str, Any] = {}
@@ -140,11 +141,8 @@ def parse(d: dict) -> tuple[dict, dict[str, list], dict[str, list]]:
                 pairs = [(None, None) if x is None else to_decimal(x) for x in v]
                 native[f"{c}_m"] = [m for m, _ in pairs]
                 native[f"{c}_e"] = [e for _, e in pairs]
-            elif (
-                c in INT_COLS
-                and _fits(v, n, int)
-                or c in SCALARS
-                and type(v) is SCALARS[c]
+            elif (c in INT_COLS and _fits(v, n, int)) or (
+                c in SCALARS and type(v) is SCALARS[c]
             ):
                 native[c] = v
             else:
@@ -203,7 +201,9 @@ def rebuild(meta: str, bench: list[dict], values: dict[str, dict[str, list]]) ->
             elif c == "result" and b["result_is_int"]:
                 out.append(v[RESULT_INT])
             elif c in DECIMAL_COLS:
-                out.append(list(map(from_decimal, v[f"{c}_m"], v[f"{c}_e"])))
+                out.append(
+                    list(map(from_decimal, v[f"{c}_m"], v[f"{c}_e"], strict=True))
+                )
             else:
                 out.append(v[c])
         results[b["name"]] = out

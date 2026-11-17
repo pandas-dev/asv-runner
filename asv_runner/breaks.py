@@ -6,11 +6,11 @@ See ``breaks.toml`` for the list and why it exists.
 from __future__ import annotations
 
 import re
+import tomllib
 from dataclasses import dataclass
 from pathlib import Path
 
 import polars as pl
-import tomllib
 
 BREAKS_PATH = Path(__file__).parent / "breaks.toml"
 

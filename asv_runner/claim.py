@@ -20,7 +20,7 @@ import json
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from asv_runner.util import execute, orphan_push_with_retry, write_github_output
@@ -31,7 +31,7 @@ LOOKBACK_COMMITS = 40
 CLAIM_TTL = timedelta(hours=24)
 MAX_ATTEMPTS = 3
 FAILURE_ISSUE_TITLE = "Benchmark run failures"
-EPOCH = datetime.fromtimestamp(0, tz=timezone.utc)
+EPOCH = datetime.fromtimestamp(0, tz=UTC)
 
 
 @dataclass
@@ -158,7 +158,7 @@ def run(args: argparse.Namespace) -> None:
         picked[0] = None
         events.clear()
         claims = read_claims(shas_path)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         changed = False
 
         sha = pick_next_sha(repo, existing_shas={claim.sha for claim in claims})
@@ -237,7 +237,7 @@ def complete(args: argparse.Namespace) -> None:
                 break
         else:
             # Benchmarked without a lease (e.g. a manual run): record it.
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             claims.append(Claim(sha=args.sha, claimed_at=now, attempts=1, done=True))
         write_claims(shas_path, claims)
         return True

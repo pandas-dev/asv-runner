@@ -16,7 +16,7 @@ ci:
   autofix_prs: false
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: debug-statements
       - id: end-of-file-fixer
@@ -27,22 +27,22 @@ repos:
         stages: [ pre-commit, pre-merge-commit, pre-push, prepare-commit-msg, commit-msg,
                   post-checkout, post-commit, post-merge, post-rewrite ]
 
-  - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.6.2
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.17.5
     hooks:
       - id: ruff
         args: [--fix]
       - id: ruff-format
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.3
     hooks:
       - id: codespell
         types_or: [python, rst, markdown]
         additional_dependencies: [tomli]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v2.0.0
+    rev: v2.4.1
     hooks:
       - id: mypy
         require_serial: true

@@ -45,8 +45,6 @@ from asv_runner import envs, results
 
 # GitHub rejects files over 100 MB and warns over 50 MB.
 MAX_FILE_BYTES = 50_000_000
-COMPRESSION = {"compression": "zstd", "compression_level": 9}
-
 RESULT_SUFFIX = ".json.zst"
 ENV_SUFFIX = ".yml.zst"
 
@@ -85,7 +83,7 @@ def write_parquet(df: pl.DataFrame, path: Path) -> None:
     """Write ``df`` to ``path`` atomically, refusing files over MAX_FILE_BYTES."""
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
-    df.write_parquet(tmp, **COMPRESSION)
+    df.write_parquet(tmp, compression="zstd", compression_level=9)
     size = tmp.stat().st_size
     if size > MAX_FILE_BYTES:
         tmp.unlink()
@@ -185,7 +183,7 @@ class Store:
 
     def runs(self) -> pl.DataFrame:
         if not self.runs_path.exists():
-            return pl.from_arrow(results.RUNS_SCHEMA.empty_table())
+            return pl.DataFrame(results.RUNS_SCHEMA.empty_table())
         return pl.read_parquet(self.runs_path)
 
     def stored_shas(self) -> set[str]:
@@ -231,7 +229,7 @@ class Store:
 
     def commit_info(self) -> pl.DataFrame:
         if not self.commit_info_path.exists():
-            return pl.from_arrow(COMMIT_INFO_SCHEMA.empty_table())
+            return pl.DataFrame(COMMIT_INFO_SCHEMA.empty_table())
         return pl.read_parquet(self.commit_info_path)
 
     def add_commit_info(self, pandas_repo: Path) -> int:
@@ -252,7 +250,7 @@ class Store:
             rows["pr"].append(int(m.group(1)) if m else None)
         if not rows["sha"]:
             return 0
-        new = pl.from_arrow(pa.table(rows, schema=COMMIT_INFO_SCHEMA))
+        new = pl.DataFrame(pa.table(rows, schema=COMMIT_INFO_SCHEMA))
         write_parquet(pl.concat([info, new]).sort("sha"), self.commit_info_path)
         return new.height
 
@@ -296,7 +294,7 @@ class Store:
             for w in writers.values():
                 w.close()
 
-            runs_new = pl.from_arrow(
+            runs_new = pl.DataFrame(
                 pa.Table.from_pylist(new_runs, schema=results.RUNS_SCHEMA)
             )
             runs_all = pl.concat(
@@ -336,7 +334,7 @@ class Store:
         if self.env_files_path.exists():
             files = pl.read_parquet(self.env_files_path)
         else:
-            files = pl.from_arrow(envs.ENV_FILES_SCHEMA.empty_table())
+            files = pl.DataFrame(envs.ENV_FILES_SCHEMA.empty_table())
         stored = set(files["sha"].to_list())
         new = [p for p in paths if sha_from_path(p, ENV_SUFFIX) not in stored]
         if not new:
@@ -355,9 +353,9 @@ class Store:
         parsed = (
             pl.read_parquet(self.envs_path)
             if self.envs_path.exists()
-            else pl.from_arrow(envs.ENVS_SCHEMA.empty_table())
+            else pl.DataFrame(envs.ENVS_SCHEMA.empty_table())
         )
-        new_parsed = pl.from_arrow(pa.table(new_rows, schema=envs.ENVS_SCHEMA))
+        new_parsed = pl.DataFrame(pa.table(new_rows, schema=envs.ENVS_SCHEMA))
         # Write parsed rows first: env_files.parquet marks a commit as stored.
         write_parquet(
             pl.concat(
@@ -365,7 +363,7 @@ class Store:
             ).sort("sha", "manager", "package"),
             self.envs_path,
         )
-        new_files_df = pl.from_arrow(pa.table(new_files, schema=envs.ENV_FILES_SCHEMA))
+        new_files_df = pl.DataFrame(pa.table(new_files, schema=envs.ENV_FILES_SCHEMA))
         write_parquet(pl.concat([files, new_files_df]).sort("sha"), self.env_files_path)
         return new_files["sha"]
 
@@ -385,7 +383,7 @@ class Store:
             rows["name"].append(name)
             rows["version"].append(definition.get("version"))
             rows["definition"].append(json.dumps(definition, sort_keys=True))
-        new = pl.from_arrow(pa.table(rows, schema=BENCHMARK_DEFS_SCHEMA))
+        new = pl.DataFrame(pa.table(rows, schema=BENCHMARK_DEFS_SCHEMA))
         if self.benchmark_defs_path.exists():
             existing = pl.read_parquet(self.benchmark_defs_path)
             new = new.join(existing, on=new.columns, how="anti")

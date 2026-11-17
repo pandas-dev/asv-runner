@@ -41,7 +41,7 @@ packages = ["asv_runner"]
 asv_runner = ["site_static/*", "breaks.toml"]
 
 [project.optional-dependencies]
-lint = ["pre-commit"]
+lint = ["prek"]
 # pandas: the reference implementation in tests/test_regressions.py
 test = ["pandas", "pytest"]
 dev = ["asv_runner[lint, test]"]

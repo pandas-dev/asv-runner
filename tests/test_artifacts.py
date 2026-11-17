@@ -3,7 +3,7 @@ from __future__ import annotations
 import io
 import json
 import zipfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -97,7 +97,7 @@ def test_lost_results(tmp_path: Path) -> None:
     store = Store(tmp_path / "store")
     store.update(input_dir, workers=1)
 
-    now = datetime(2026, 11, 16, tzinfo=timezone.utc)
+    now = datetime(2026, 11, 16, tzinfo=UTC)
     old = (now - timedelta(days=3)).isoformat()
     recent = (now - timedelta(hours=5)).isoformat()
     shas = tmp_path / "shas.txt"

@@ -135,7 +135,7 @@ def test_week_key_uses_iso_year() -> None:
     import datetime as dt
 
     # 2027-01-01 is a Friday in ISO week 2026-W53.
-    assert week_key(dt.datetime(2027, 1, 1, tzinfo=dt.timezone.utc)) == "2026-W53"
+    assert week_key(dt.datetime(2027, 1, 1, tzinfo=dt.UTC)) == "2026-W53"
 
 
 def _git(repo: Path, *args: str) -> str:

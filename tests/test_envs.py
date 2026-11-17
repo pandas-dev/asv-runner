@@ -7,7 +7,9 @@ from tests._results_helpers import CONDA_ENV, PIXI_ENV
 
 
 def _rows(out: dict[str, list]) -> list[tuple]:
-    return list(zip(out["manager"], out["package"], out["version"], out["build"]))
+    return list(
+        zip(out["manager"], out["package"], out["version"], out["build"], strict=True)
+    )
 
 
 def test_conda_export() -> None:

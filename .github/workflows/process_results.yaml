@@ -39,12 +39,12 @@ jobs:
       site: ${{ steps.site.outputs.ready }}
     steps:
       - name: Checkout asv-runner code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: code
 
       - name: Checkout result and env files
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ env.INPUT_BRANCH }}
           path: input
@@ -71,7 +71,7 @@ jobs:
         run: git clone --quiet --filter=tree:0 --no-checkout https://github.com/pandas-dev/pandas pandas
 
       - name: Setup Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
@@ -130,7 +130,7 @@ jobs:
           EOF
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
@@ -166,4 +166,4 @@ jobs:
     steps:
       - name: Deploy
         id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5

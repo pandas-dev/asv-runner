@@ -14,7 +14,7 @@ import io
 import json
 import subprocess
 import zipfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from asv_runner.claim import read_claims
@@ -75,7 +75,7 @@ def lost_results(
     store: Store, shas_path: Path, now: datetime | None = None
 ) -> list[str]:
     """Done leases older than LOST_AFTER whose results are not in the store."""
-    now = now or datetime.now(timezone.utc)
+    now = now or datetime.now(UTC)
     stored = store.stored_shas()
     return [
         claim.sha

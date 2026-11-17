@@ -3,7 +3,7 @@ from __future__ import annotations
 import argparse
 import subprocess
 from collections.abc import Callable
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -210,7 +210,7 @@ def test_cmd_claim_picks_sha_and_pushes(
     assert pushed.sha == head_sha
     assert pushed.attempts == 1
     assert not pushed.abandoned
-    assert datetime.now(timezone.utc) - pushed.claimed_at < timedelta(minutes=5)
+    assert datetime.now(UTC) - pushed.claimed_at < timedelta(minutes=5)
     assert notifications == []
 
 
@@ -295,7 +295,7 @@ def test_cmd_claim_skips_in_flight_lease(
 ) -> None:
     _, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
     head_sha, second_sha = shas
-    now = datetime.now(timezone.utc).isoformat()
+    now = datetime.now(UTC).isoformat()
     (storage / "data" / "shas.txt").write_text(
         f"{second_sha} {OLD_TS} 0 done\n{head_sha} {now} 1\n"
     )
@@ -460,8 +460,7 @@ def test_init_claims_marks_leases_with_results_done() -> None:
 def test_init_reads_old_branch_listing(tmp_path: Path) -> None:
     (tmp_path / "shas.txt").write_text("sha1111\nsha2222\n")
     (tmp_path / "results.txt").write_text(
-        "data/results/asvrunner/machine.json\n"
-        "data/results/asvrunner/sha1111.json.zst\n"
+        "data/results/asvrunner/machine.json\ndata/results/asvrunner/sha1111.json.zst\n"
     )
     claim_mod.init(
         argparse.Namespace(

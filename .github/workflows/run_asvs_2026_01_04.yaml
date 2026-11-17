@@ -37,7 +37,7 @@ jobs:
     steps:
       # In order to run pandas' actions, we have to checkout into the root directory.
       - name: Checkout pandas
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: pandas-dev/pandas
           fetch-depth: 0
@@ -45,7 +45,7 @@ jobs:
       # asv_runner scripts are run from the workflow's own ref (main on schedule,
       # whatever branch you choose on workflow_dispatch).
       - name: Checkout asv-runner code
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: asv-runner-code/
 
@@ -127,7 +127,7 @@ jobs:
       # process_results.yaml downloads this artifact and stores the results.
       - name: Upload results
         if: steps.claim.outputs.new_commit == 'yes'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: result-${{ steps.claim.outputs.sha }}
           path: staged

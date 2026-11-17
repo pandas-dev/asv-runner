@@ -96,7 +96,7 @@ def env_changes(store: Store, commits: pl.DataFrame) -> list[dict]:
     prev_format = None
     for i in sorted(by_commit):
         g = by_commit[i]
-        pkgs = dict(zip(g["package"].to_list(), g["version"].to_list()))
+        pkgs = dict(zip(g["package"].to_list(), g["version"].to_list(), strict=True))
         fmt = g["format"][0]
         if prev_pkgs is not None:
             if fmt != prev_format:
@@ -253,7 +253,7 @@ def _write_graph(
     dense = {}
     for sid, idx, vals in rows:
         row = [None] * len(bench_commits)
-        for i, v in zip(idx, vals):
+        for i, v in zip(idx, vals, strict=True):
             row[pos[i]] = v
         dense[sid] = row
     params = [list(p) for p in series_params]

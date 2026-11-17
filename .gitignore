@@ -129,6 +129,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+# Written by `uv check` in the ty hook.
+uv.lock
 
 # Spyder project settings
 .spyderproject

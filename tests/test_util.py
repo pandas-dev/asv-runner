@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -7,15 +8,16 @@ from pathlib import Path
 import pytest
 
 from asv_runner.util import (
-    escape_ansi,
-    execute,
+    DEFAULT_REPO,
+    gh,
+    github_repo,
     orphan_push_with_retry,
     time_to_str,
     write_github_output,
 )
 from tests._helpers import init_remote_and_storage
 
-# === time_to_str / escape_ansi ===
+# === time_to_str ===
 
 
 @pytest.mark.parametrize(
@@ -47,32 +49,46 @@ def test_time_to_str_negative(value: float, expected: str) -> None:
     assert time_to_str(value) == expected
 
 
-def test_escape_ansi_passes_plain_text() -> None:
-    assert escape_ansi("hello world") == "hello world"
+# === gh / github_repo ===
 
 
-def test_escape_ansi_strips_color_codes() -> None:
-    colored = "\x1b[31mhello\x1b[0m world"
-    assert escape_ansi(colored) == "hello world"
+@pytest.fixture
+def fake_gh_cli(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A ``gh`` on PATH that echoes its arguments and stdin, failing on ``fail``."""
+    bin_dir = tmp_path / "bin"
+    bin_dir.mkdir()
+    script = bin_dir / "gh"
+    script.write_text(
+        "#!/bin/sh\n"
+        'if [ "$1" = fail ]; then echo "bad request" >&2; exit 1; fi\n'
+        'echo "args: $*"\n'
+        "cat\n"
+    )
+    script.chmod(0o755)
+    monkeypatch.setenv("PATH", f"{bin_dir}:{os.environ['PATH']}")
 
 
-# === execute ===
+@pytest.mark.usefixtures("fake_gh_cli")
+def test_gh_passes_args_and_stdin() -> None:
+    # Arguments are passed as a list, so spaces and quotes survive unchanged.
+    out = gh(["issue", "create", "--title", 'a "b" c'], input="body\n")
+    assert out == 'args: issue create --title a "b" c\nbody\n'
 
 
-def test_execute_returns_stdout() -> None:
-    assert execute("echo hello").strip() == "hello"
+@pytest.mark.usefixtures("fake_gh_cli")
+def test_gh_raises_with_stderr() -> None:
+    with pytest.raises(RuntimeError, match="bad request"):
+        gh(["fail"])
 
 
-def test_execute_passes_stdin_through() -> None:
-    assert execute("cat", input="ping\n").strip() == "ping"
+def test_github_repo_from_actions_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("GITHUB_REPOSITORY", "someone/fork")
+    assert github_repo() == "someone/fork"
 
 
-def test_execute_raises_with_stdout_and_stderr_on_nonzero_exit() -> None:
-    with pytest.raises(ValueError) as exc_info:
-        execute("echo out; echo err >&2; exit 1")
-    msg = str(exc_info.value)
-    assert "out" in msg
-    assert "err" in msg
+def test_github_repo_default(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
+    assert github_repo() == DEFAULT_REPO
 
 
 # === write_github_output ===

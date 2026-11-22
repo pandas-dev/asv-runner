@@ -47,7 +47,7 @@ def fake_gh(monkeypatch: pytest.MonkeyPatch) -> dict:
         state["downloaded"].append(artifact_id)
         return state["zips"][artifact_id]
 
-    monkeypatch.setattr(artifacts, "_gh", gh)
+    monkeypatch.setattr(artifacts, "gh_bytes", gh)
     return state
 
 

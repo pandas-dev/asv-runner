@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # Workflows pin actions by major version, so this opens a PR only for a new
+  # major release. Hook revisions in prek.toml are bumped with `prek update`.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      actions:
+        patterns: ["*"]

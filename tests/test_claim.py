@@ -356,16 +356,16 @@ def test_cmd_claim_survives_notification_failure(
 # === failure notifications ===
 
 
-def _fake_execute(
-    calls: list[tuple[str, str | None]], list_result: str
+def _fake_gh(
+    calls: list[tuple[list[str], str | None]], list_result: str
 ) -> Callable[..., str]:
-    def _execute(cmd: str, *, input: str | None = None) -> str:
-        calls.append((cmd, input))
-        if cmd.startswith("gh issue list"):
+    def _gh(args: list[str], *, input: str | None = None) -> str:
+        calls.append((args, input))
+        if args[:2] == ["issue", "list"]:
             return list_result
         return "https://github.com/pandas-dev/asv-runner/issues/99\n"
 
-    return _execute
+    return _gh
 
 
 def test_find_failure_issue_matches_title(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -373,13 +373,13 @@ def test_find_failure_issue_matches_title(monkeypatch: pytest.MonkeyPatch) -> No
         '[{"number": 7, "title": "other"},'
         ' {"number": 42, "title": "Benchmark run failures"}]'
     )
-    monkeypatch.setattr(claim_mod, "execute", _fake_execute([], listed))
+    monkeypatch.setattr(claim_mod, "gh", _fake_gh([], listed))
     assert find_failure_issue() == "42"
 
 
 def test_find_failure_issue_no_match(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(
-        claim_mod, "execute", _fake_execute([], '[{"number": 7, "title": "other"}]')
+        claim_mod, "gh", _fake_gh([], '[{"number": 7, "title": "other"}]')
     )
     assert find_failure_issue() is None
 
@@ -387,26 +387,29 @@ def test_find_failure_issue_no_match(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_notify_failures_creates_issue_when_absent(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    calls: list[tuple[str, str | None]] = []
-    monkeypatch.setattr(claim_mod, "execute", _fake_execute(calls, "[]"))
+    calls: list[tuple[list[str], str | None]] = []
+    monkeypatch.setenv("GITHUB_REPOSITORY", "someone/fork")
+    monkeypatch.setattr(claim_mod, "gh", _fake_gh(calls, "[]"))
     notify_failures(["event one", "event two"])
 
-    cmd, body = calls[-1]
-    assert cmd.startswith("gh issue create")
-    assert '--title "Benchmark run failures"' in cmd
+    args, body = calls[-1]
+    assert args == [
+        *("issue", "create", "--title", "Benchmark run failures"),
+        *("--repo", "someone/fork", "--body-file", "-"),
+    ]
     assert body == "- event one\n- event two"
 
 
 def test_notify_failures_comments_on_existing_issue(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    calls: list[tuple[str, str | None]] = []
+    calls: list[tuple[list[str], str | None]] = []
     listed = '[{"number": 42, "title": "Benchmark run failures"}]'
-    monkeypatch.setattr(claim_mod, "execute", _fake_execute(calls, listed))
+    monkeypatch.setattr(claim_mod, "gh", _fake_gh(calls, listed))
     notify_failures(["event one"])
 
-    cmd, body = calls[-1]
-    assert cmd.startswith("gh issue comment 42")
+    args, body = calls[-1]
+    assert args[:3] == ["issue", "comment", "42"]
     assert body == "- event one"
 
 

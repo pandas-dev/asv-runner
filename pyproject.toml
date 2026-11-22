@@ -31,7 +31,7 @@ Source = "https://github.com/rhshadrach/asv-runner"
 Tracker = "https://github.com/rhshadrach/asv-runner/issues"
 
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]

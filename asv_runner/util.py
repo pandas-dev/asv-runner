@@ -4,28 +4,38 @@ from __future__ import annotations
 
 import os
 import random
-import re
 import subprocess
 import sys
 import time
 from collections.abc import Callable
 from pathlib import Path
 
+# Where issues are opened and artifacts are read when not run in GitHub Actions.
+DEFAULT_REPO = "pandas-dev/asv-runner"
 
-def execute(cmd: str, *, input: str | None = None) -> str:
-    print("Executing command")
-    print(f"`{cmd}`")
+
+def github_repo() -> str:
+    """OWNER/REPO of this repository; GitHub Actions sets GITHUB_REPOSITORY."""
+    return os.environ.get("GITHUB_REPOSITORY") or DEFAULT_REPO
+
+
+def gh_bytes(args: list[str], *, input: str | None = None) -> bytes:
+    """Run the ``gh`` CLI; raise with its stderr if it fails."""
     response = subprocess.run(
-        cmd,
-        shell=True,
+        ["gh", *args],
+        input=None if input is None else input.encode(),
         capture_output=True,
         check=False,
-        input=input,
-        text=True,
     )
     if response.returncode != 0:
-        raise ValueError(f"{response.stdout}\n\n{response.stderr}")
+        raise RuntimeError(
+            f"gh {' '.join(args)} failed:\n{response.stderr.decode(errors='replace')}"
+        )
     return response.stdout
+
+
+def gh(args: list[str], *, input: str | None = None) -> str:
+    return gh_bytes(args, input=input).decode()
 
 
 def git(args: list[str], *, cwd: Path, capture: bool = False) -> str:
@@ -66,11 +76,6 @@ def time_to_str(x: float) -> str:
     if is_negative:
         result = "-" + result
     return result
-
-
-def escape_ansi(line: str) -> str:
-    ansi_escape = re.compile(r"(?:\x1B[@-_]|[\x80-\x9F])[0-?]*[ -/]*[@-~]")
-    return ansi_escape.sub("", line)
 
 
 def configure_git_user(repo: Path) -> None:

@@ -8,7 +8,6 @@ on:
   workflow_dispatch:
 
 env:
-  ENV_FILE: environment.yml
   PANDAS_CI: 1
   # Leases (data/shas.txt) live on a small branch of their own. Results are
   # uploaded as artifacts that process_results.yaml stores nightly.

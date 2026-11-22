@@ -20,7 +20,12 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
-from asv_runner.util import execute, orphan_push_with_retry, write_github_output
+from asv_runner.util import (
+    gh,
+    github_repo,
+    orphan_push_with_retry,
+    write_github_output,
+)
 
 LOOKBACK_COMMITS = 40
 # GitHub kills a job after 6 hours, so a lease older than this with no
@@ -90,12 +95,11 @@ def pick_next_sha(repo: Path, existing_shas: set[str]) -> str | None:
 
 
 def find_failure_issue() -> str | None:
-    result = execute(
-        "gh issue list"
-        " --repo pandas-dev/asv-runner"
-        " --state open"
-        " --limit 1000"
-        " --json number,title"
+    result = gh(
+        [
+            *("issue", "list", "--repo", github_repo(), "--state", "open"),
+            *("--limit", "1000", "--json", "number,title"),
+        ]
     )
     for issue in json.loads(result):
         if issue["title"] == FAILURE_ISSUE_TITLE:
@@ -108,19 +112,10 @@ def notify_failures(events: list[str]) -> None:
     body = "\n".join(f"- {event}" for event in events)
     issue_number = find_failure_issue()
     if issue_number is None:
-        cmd = (
-            "gh issue create"
-            " --repo pandas-dev/asv-runner"
-            f' --title "{FAILURE_ISSUE_TITLE}"'
-            " --body-file -"
-        )
+        args = ["issue", "create", "--title", FAILURE_ISSUE_TITLE]
     else:
-        cmd = (
-            f"gh issue comment {issue_number}"
-            " --repo pandas-dev/asv-runner"
-            " --body-file -"
-        )
-    execute(cmd, input=body)
+        args = ["issue", "comment", issue_number]
+    gh([*args, "--repo", github_repo(), "--body-file", "-"], input=body)
 
 
 def run(args: argparse.Namespace) -> None:

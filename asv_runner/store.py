@@ -408,7 +408,7 @@ class Store:
         shas = bench["sha"].unique()
         meta = dict(
             self.runs()
-            .filter(pl.col("sha").is_in(shas))
+            .filter(pl.col("sha").is_in(shas.implode()))
             .select("sha", "meta")
             .iter_rows()
         )

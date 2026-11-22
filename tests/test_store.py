@@ -7,8 +7,14 @@ import polars as pl
 import pytest
 
 from asv_runner import store as store_mod
-from asv_runner.store import FileTooLargeError, Store, week_key
-from asv_runner.verify import verify
+from asv_runner.store import (
+    ENV_SUFFIX,
+    RESULT_SUFFIX,
+    FileTooLargeError,
+    Store,
+    read_zst,
+    week_key,
+)
 from tests._results_helpers import PIXI_ENV, add_commit, write_benchmark_defs
 
 # Commit dates in ms: two in ISO week 2026-W10, one in 2026-W12.
@@ -26,7 +32,32 @@ def input_dir(tmp_path: Path) -> Path:
     return d
 
 
-def test_update_and_verify(tmp_path: Path, input_dir: Path) -> None:
+def assert_round_trips(store: Store, input_dir: Path) -> None:
+    """Every stored result and env file rebuilds to the original exactly."""
+    results_dir = input_dir / "data" / "results" / "asvrunner"
+    rebuilt = {
+        sha: result
+        for week in store.weeks()
+        for sha, result in store.rebuild_week(week)
+    }
+    originals = {
+        path.name.removesuffix(RESULT_SUFFIX): json.loads(read_zst(path))
+        for path in results_dir.glob(f"*{RESULT_SUFFIX}")
+    }
+    assert rebuilt.keys() == originals.keys()
+    for sha, result in rebuilt.items():
+        # Compare serialized text so int vs float, NaN vs null, and key order
+        # all count as differences.
+        assert json.dumps(result) == json.dumps(originals[sha]), sha
+
+    env_originals = {
+        path.name.removesuffix(ENV_SUFFIX): read_zst(path).decode()
+        for path in (input_dir / "data" / "envs").glob(f"*{ENV_SUFFIX}")
+    }
+    assert store.env_text() == env_originals
+
+
+def test_update_round_trips(tmp_path: Path, input_dir: Path) -> None:
     store = Store(tmp_path / "store")
     report = store.update(input_dir, workers=1)
     assert sorted(report.results_added) == ["aaa", "bbb"]
@@ -35,10 +66,7 @@ def test_update_and_verify(tmp_path: Path, input_dir: Path) -> None:
     assert report.benchmark_defs_added == 1
     assert store.weeks() == ["2026-W10"]
 
-    check = verify(store, input_dir, workers=1)
-    assert check.ok, check
-    assert check.results_checked == 2
-    assert check.envs_checked == 2
+    assert_round_trips(store, input_dir)
 
 
 def test_rows_sorted_within_partition(tmp_path: Path, input_dir: Path) -> None:
@@ -75,7 +103,7 @@ def test_update_rewrites_only_touched_weeks(tmp_path: Path, input_dir: Path) -> 
     assert report.results_added == ["ddd"]
     assert report.weeks_written == ["2026-W10"]
     assert w12.stat().st_mtime_ns == mtime
-    assert verify(store, input_dir, workers=1).ok
+    assert_round_trips(store, input_dir)
 
 
 def test_interrupted_update_does_not_duplicate(tmp_path: Path, input_dir: Path) -> None:
@@ -90,16 +118,7 @@ def test_interrupted_update_does_not_duplicate(tmp_path: Path, input_dir: Path) 
     values = store.read_partition("values", "2026-W10")
     assert values is not None
     assert values.filter(pl.col("sha") == "aaa").height == 6
-    assert verify(store, input_dir, workers=1).ok
-
-
-def test_verify_reports_missing(tmp_path: Path, input_dir: Path) -> None:
-    store = Store(tmp_path / "store")
-    store.update(input_dir, workers=1)
-    add_commit(input_dir, "ccc", WEEK12)
-    check = verify(store, input_dir, workers=1)
-    assert not check.ok
-    assert check.missing == ["result ccc.json.zst", "env ccc.yml.zst"]
+    assert_round_trips(store, input_dir)
 
 
 def test_mismatched_commit_hash_raises(tmp_path: Path, input_dir: Path) -> None:

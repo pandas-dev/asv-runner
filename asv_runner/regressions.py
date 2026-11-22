@@ -1,20 +1,16 @@
 """Detect step changes (regressions and improvements) in benchmark series.
 
-Same method as ``detect_regression`` in ``asv_runner/process_results.py``:
-compare a window of ``window`` results with the ``window`` results right
+Compare a window of ``window`` results with the ``window`` results right
 before it. A regression is flagged when every result in the newer window is
 slower than every result in the older one by more than ``1 / tol``; an
 improvement is the mirror image. The flag is placed on the first commit of the
 newer window, and only the first commit of a run of flags is kept.
-
-Differences from the old code:
 
 - Windows never span a change of benchmark code ``version``. A version change
   can shift results by itself; at ``4606f19379`` (pandas #65681, ``gc.collect``
   in the shared setup) a third of the affected series moved by more than 5%.
 - Windows never span a break point listed in ``breaks.toml`` (a change of how
   results are measured).
-- Improvements are detected too.
 - Each flag carries ``step``: the median of the newer window over the median of
   the older one, minus one. It is less noisy than the change from the single
   previous result (``pct_change``, kept for the issue text).

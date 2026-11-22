@@ -8,11 +8,10 @@ Hourly benchmark run (run_asvs_*.yaml), standard library only:
   stage       - zstd-compress the run's result and env files for upload as an
                 artifact
   complete    - mark the SHA's lease done once its artifact is uploaded
-  init-claims - create the claims branch's shas.txt from the old results branch
 
 Nightly processing (process_results.yaml), needs the package's dependencies:
   update    - add new result files, env files, benchmark definitions, and commit
-              titles from a checkout of the results branch to the Parquet store
+              titles from the downloaded results to the Parquet store
   verify    - rebuild every stored file and compare it to the originals
   site      - build the static benchmark site from the store
   issues    - open GitHub issues for new regressions (or write them to a file)
@@ -145,17 +144,14 @@ def main() -> int | None:
     p.add_argument("--branch", required=True)
     p.set_defaults(func=claim.complete)
 
-    p = sub.add_parser("init-claims")
-    p.add_argument("--shas", required=True, help="The old branch's data/shas.txt.")
-    p.add_argument(
-        "--results", required=True, help="List of the old branch's result files."
-    )
-    p.add_argument("--out", required=True, help="Directory of the new claims branch.")
-    p.set_defaults(func=claim.init)
-
     for name, func in (("update", _update), ("verify", _verify)):
         p = sub.add_parser(name)
-        p.add_argument("--input", required=True, help="Checkout of the results branch.")
+        p.add_argument(
+            "--input",
+            required=True,
+            help="Directory holding data/results/asvrunner and data/envs, "
+            "such as the output of fetch-results.",
+        )
         p.add_argument("--store", required=True, help="Root of the Parquet store.")
         p.add_argument("--workers", type=int, default=None)
         if name == "update":

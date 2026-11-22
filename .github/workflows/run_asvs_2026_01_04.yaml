@@ -13,9 +13,6 @@ env:
   # Leases (data/shas.txt) live on a small branch of their own. Results are
   # uploaded as artifacts that process_results.yaml stores nightly.
   CLAIMS_BRANCH: asv-claims
-  # Where leases and results were kept before; used once to create
-  # CLAIMS_BRANCH.
-  OLD_BRANCH: pandas_2026_01_04
   # Suppress cwd-on-sys.path so `python -m asv_runner` doesn't pick up the
   # uncompiled pandas source checkout at the workspace root.
   PYTHONSAFEPATH: "1"
@@ -49,36 +46,12 @@ jobs:
         with:
           path: asv-runner-code/
 
-      # Creates CLAIMS_BRANCH on first use from OLD_BRANCH's shas.txt; leases
-      # whose result file exists there start out done. The blobless clone
-      # lists file names without downloading them.
       - name: Checkout the claims branch
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          if git ls-remote --exit-code --heads "$url" "$CLAIMS_BRANCH" > /dev/null; then
-            git clone --quiet --depth 1 --branch "$CLAIMS_BRANCH" "$url" claims
-            exit 0
-          fi
-          echo "$CLAIMS_BRANCH does not exist yet; creating it from $OLD_BRANCH."
-          git clone --quiet --depth 1 --filter=blob:none --no-checkout \
-            --branch "$OLD_BRANCH" "$url" old
-          git -C old show HEAD:data/shas.txt > old_shas.txt
-          git -C old ls-tree -r --name-only HEAD data/results/asvrunner > old_results.txt
-          PYTHONPATH=asv-runner-code python -m asv_runner init-claims \
-            --shas old_shas.txt --results old_results.txt --out claims
-          git -C claims init --quiet -b "$CLAIMS_BRANCH"
-          git -C claims remote add origin "$url"
-          git -C claims add -A
-          git -C claims -c user.name="github-actions[bot]" \
-            -c user.email="github-actions[bot]@users.noreply.github.com" \
-            commit --quiet -m "Claims"
-          # Another run may have created it first; use theirs.
-          if ! git -C claims push --quiet origin "$CLAIMS_BRANCH"; then
-            rm -rf claims
-            git clone --quiet --depth 1 --branch "$CLAIMS_BRANCH" "$url" claims
-          fi
+          git clone --quiet --depth 1 --branch "$CLAIMS_BRANCH" "$url" claims
 
       - name: Claim next SHA
         id: claim

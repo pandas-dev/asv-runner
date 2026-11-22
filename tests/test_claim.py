@@ -11,12 +11,10 @@ import pytest
 
 from asv_runner import claim as claim_mod
 from asv_runner.claim import (
-    EPOCH,
     LOOKBACK_COMMITS,
     MAX_ATTEMPTS,
     Claim,
     find_failure_issue,
-    init_claims,
     notify_failures,
     pick_next_sha,
     read_claims,
@@ -94,11 +92,6 @@ def test_pick_next_sha_invokes_git_log_with_expected_argv(
 # === Claim parsing ===
 
 
-def test_claim_from_bare_line_is_expired_lease() -> None:
-    result = Claim.from_line("sha1111")
-    assert result == Claim(sha="sha1111", claimed_at=EPOCH, attempts=0)
-
-
 def test_claim_from_full_line() -> None:
     result = Claim.from_line(f"sha1111 {OLD_TS} 2")
     assert result == Claim(
@@ -129,7 +122,7 @@ def test_read_claims_missing_file(tmp_path: Path) -> None:
 
 def test_read_claims_ignores_blank_lines(tmp_path: Path) -> None:
     shas_path = tmp_path / "shas.txt"
-    shas_path.write_text(f"sha1111\n\nsha2222 {OLD_TS} 2\n")
+    shas_path.write_text(f"sha1111 {OLD_TS} 1\n\nsha2222 {OLD_TS} 2\n")
     assert [claim.sha for claim in read_claims(shas_path)] == ["sha1111", "sha2222"]
 
 
@@ -222,7 +215,9 @@ def test_cmd_claim_appends_next_unseen_sha(
     )
     head_sha, second_sha, third_sha = shas
     # Pre-seed shas.txt with everything except the most recent commit.
-    (storage / "data" / "shas.txt").write_text(f"{third_sha}\n{second_sha}\n")
+    (storage / "data" / "shas.txt").write_text(
+        f"{third_sha} {OLD_TS} 1 done\n{second_sha} {OLD_TS} 1 done\n"
+    )
     cmd_claim(args)
 
     assert f"sha={head_sha}" in output_file.read_text()
@@ -245,27 +240,6 @@ def test_cmd_claim_no_new_commit_when_all_complete(
     out = output_file.read_text()
     assert "sha=NONE" in out
     assert "new_commit=no" in out
-    assert notifications == []
-
-
-def test_cmd_claim_retries_legacy_bare_sha_without_notifying(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, notifications: list[str]
-) -> None:
-    remote, storage, shas, args, output_file = _claim_scenario(tmp_path, monkeypatch)
-    head_sha, second_sha = shas
-    (storage / "data" / "shas.txt").write_text(
-        f"{second_sha} {OLD_TS} 0 done\n{head_sha}\n"
-    )
-    cmd_claim(args)
-
-    out = output_file.read_text()
-    assert f"sha={head_sha}" in out
-    assert "new_commit=yes" in out
-
-    retried = {claim.sha: claim for claim in _pushed_claims(tmp_path, remote)}
-    assert retried[head_sha].attempts == 1
-    assert retried[second_sha].attempts == 0
-    # Legacy backfill is not a newly detected death.
     assert notifications == []
 
 
@@ -445,32 +419,6 @@ def test_claim_done_line_roundtrip() -> None:
     assert claim.done
     assert not claim.abandoned
     assert claim.to_line() == line
-
-
-def test_init_claims_marks_leases_with_results_done() -> None:
-    text = f"sha1111\nsha2222 {OLD_TS} 3 abandoned\nsha3333 {OLD_TS} 1\n"
-    claims = {c.sha: c for c in init_claims(text, {"sha1111", "sha2222"})}
-    assert claims["sha1111"].done
-    # Results arrived after the lease was given up on: it is complete.
-    assert claims["sha2222"].done
-    assert not claims["sha2222"].abandoned
-    assert not claims["sha3333"].done
-
-
-def test_init_reads_old_branch_listing(tmp_path: Path) -> None:
-    (tmp_path / "shas.txt").write_text("sha1111\nsha2222\n")
-    (tmp_path / "results.txt").write_text(
-        "data/results/asvrunner/machine.json\ndata/results/asvrunner/sha1111.json.zst\n"
-    )
-    claim_mod.init(
-        argparse.Namespace(
-            shas=str(tmp_path / "shas.txt"),
-            results=str(tmp_path / "results.txt"),
-            out=str(tmp_path / "claims"),
-        )
-    )
-    claims = read_claims(tmp_path / "claims" / "data" / "shas.txt")
-    assert [(c.sha, c.done) for c in claims] == [("sha1111", True), ("sha2222", False)]
 
 
 def test_complete_marks_lease_done_and_pushes(

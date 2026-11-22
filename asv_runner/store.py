@@ -201,7 +201,7 @@ class Store:
         workers: int | None = None,
         pandas_repo: Path | None = None,
     ) -> UpdateReport:
-        """Add everything new under a checkout of the results branch.
+        """Add everything new under ``input_dir`` (the output of fetch-results).
 
         With ``pandas_repo`` (a clone of pandas; commit objects are enough), also
         store the title and PR number of commits that do not have them yet.

@@ -1,5 +1,0 @@
-# Transient decompressed files: storage uses *.json.zst / *.yml.zst,
-# decompression at workflow time produces *.json / *.yml in place.
-results/asvrunner/*.json
-!results/asvrunner/machine.json
-envs/*.yml

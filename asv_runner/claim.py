@@ -4,13 +4,10 @@ Each line of shas.txt is a lease:
 ``<sha> <claimed_at> <attempts> [abandoned|done]``. A run marks its lease
 ``done`` once its results are uploaded (see ``complete``); a lease that is not
 done and whose age exceeds CLAIM_TTL belonged to a run that died (timeout,
-build failure, runner loss) and is retried up to MAX_ATTEMPTS times. Legacy
-bare-sha lines parse as expired leases with no attempts on record. Detected
+build failure, runner loss) and is retried up to MAX_ATTEMPTS times. Detected
 failures are reported as comments on a single tracking issue.
 
-The claims branch holds only ``data/shas.txt``. ``init_claims`` creates it
-from the old results branch, where a lease was complete when its result file
-existed.
+The claims branch holds only ``data/shas.txt``.
 """
 
 from __future__ import annotations
@@ -31,7 +28,6 @@ LOOKBACK_COMMITS = 40
 CLAIM_TTL = timedelta(hours=24)
 MAX_ATTEMPTS = 3
 FAILURE_ISSUE_TITLE = "Benchmark run failures"
-EPOCH = datetime.fromtimestamp(0, tz=UTC)
 
 
 @dataclass
@@ -45,11 +41,6 @@ class Claim:
     @classmethod
     def from_line(cls, line: str) -> Claim:
         parts = line.split()
-        if len(parts) == 1:
-            # Legacy bare-sha line: an expired lease with no attempts on
-            # record. If its results exist it is complete; otherwise it is
-            # eligible for retry.
-            return cls(sha=parts[0], claimed_at=EPOCH, attempts=0)
         status = parts[3] if len(parts) > 3 else ""
         return cls(
             sha=parts[0],
@@ -80,17 +71,6 @@ def read_claims(shas_path: Path) -> list[Claim]:
 
 def write_claims(shas_path: Path, claims: list[Claim]) -> None:
     shas_path.write_text("".join(f"{claim.to_line()}\n" for claim in claims))
-
-
-def init_claims(shas_text: str, result_shas: set[str]) -> list[Claim]:
-    """Leases from the old results branch's shas.txt, marking those whose
-    result file existed there as done."""
-    claims = [Claim.from_line(line) for line in shas_text.splitlines() if line.strip()]
-    for claim in claims:
-        if claim.sha in result_shas:
-            claim.done = True
-            claim.abandoned = False
-    return claims
 
 
 def pick_next_sha(repo: Path, existing_shas: set[str]) -> str | None:
@@ -185,15 +165,12 @@ def run(args: argparse.Namespace) -> None:
                     continue
                 claim.attempts += 1
                 claim.claimed_at = now
-                if claim.attempts > 1:
-                    # attempts == 1 is a legacy bare line being backfilled,
-                    # not a newly detected death.
-                    ttl_hours = int(CLAIM_TTL.total_seconds() // 3600)
-                    events.append(
-                        f"Run for `{claim.sha}` produced no results within"
-                        f" {ttl_hours} hours; retrying"
-                        f" (attempt {claim.attempts}/{MAX_ATTEMPTS})."
-                    )
+                ttl_hours = int(CLAIM_TTL.total_seconds() // 3600)
+                events.append(
+                    f"Run for `{claim.sha}` produced no results within"
+                    f" {ttl_hours} hours; retrying"
+                    f" (attempt {claim.attempts}/{MAX_ATTEMPTS})."
+                )
                 picked[0] = claim.sha
                 changed = True
                 break
@@ -248,22 +225,3 @@ def complete(args: argparse.Namespace) -> None:
         message=f"Mark {args.sha} done",
         modify_tree=modify_tree,
     )
-
-
-def init(args: argparse.Namespace) -> None:
-    """Write data/shas.txt for a new claims branch from the old results branch.
-
-    ``--shas`` is the old branch's data/shas.txt and ``--results`` lists the
-    old branch's result files (``git ls-tree --name-only`` output).
-    """
-    result_shas = {
-        Path(line).name.removesuffix(".json.zst")
-        for line in Path(args.results).read_text().splitlines()
-        if line.endswith(".json.zst")
-    }
-    claims = init_claims(Path(args.shas).read_text(), result_shas)
-    shas_path = Path(args.out) / "data" / "shas.txt"
-    shas_path.parent.mkdir(parents=True, exist_ok=True)
-    write_claims(shas_path, claims)
-    n_done = sum(claim.done for claim in claims)
-    print(f"Wrote {len(claims)} leases ({n_done} done) to {shas_path}.")

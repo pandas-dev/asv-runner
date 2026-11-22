@@ -14,10 +14,6 @@ env:
   # STORE_BRANCH. CLAIMS_BRANCH holds the hourly runs' leases.
   STORE_BRANCH: pandas_2026_01_04_v2
   CLAIMS_BRANCH: asv-claims
-  # Results were pushed to this branch before the artifacts; still read so none
-  # pushed shortly before the switch are missed. Remove once one nightly run
-  # after the switch has stored them.
-  INPUT_BRANCH: pandas_2026_01_04
   PYTHON_VERSION: "3.14"
   SITE_URL: https://pandas-dev.github.io/asv-runner/
 
@@ -42,16 +38,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: code
-
-      - name: Checkout result and env files
-        uses: actions/checkout@v7
-        with:
-          ref: ${{ env.INPUT_BRANCH }}
-          path: input
-          fetch-depth: 1
-          sparse-checkout: |
-            data/results
-            data/envs
 
       - name: Checkout the store branch
         env:

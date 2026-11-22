@@ -12,7 +12,6 @@ Hourly benchmark run (run_asvs_*.yaml), standard library only:
 Nightly processing (process_results.yaml), needs the package's dependencies:
   update    - add new result files, env files, benchmark definitions, and commit
               titles from the downloaded results to the Parquet store
-  verify    - rebuild every stored file and compare it to the originals
   site      - build the static benchmark site from the store
   issues    - open GitHub issues for new regressions (or write them to a file)
   fetch-results - download result artifacts of commits not yet stored
@@ -52,24 +51,6 @@ def _update(args: argparse.Namespace) -> int:
         f"in {time.perf_counter() - t0:.1f}s."
     )
     return 0
-
-
-def _verify(args: argparse.Namespace) -> int:
-    from asv_runner.store import Store
-    from asv_runner.verify import verify
-
-    t0 = time.perf_counter()
-    report = verify(Store(Path(args.store)), Path(args.input), workers=args.workers)
-    print(
-        f"Checked {report.results_checked} result files and {report.envs_checked} "
-        f"env files in {time.perf_counter() - t0:.1f}s."
-    )
-    for line in report.mismatches[:20]:
-        print(f"MISMATCH {line}")
-    for line in report.missing[:20]:
-        print(f"MISSING {line}")
-    print(f"{len(report.mismatches)} mismatches, {len(report.missing)} missing.")
-    return 0 if report.ok else 1
 
 
 def _site(args: argparse.Namespace) -> int:
@@ -144,22 +125,20 @@ def main() -> int | None:
     p.add_argument("--branch", required=True)
     p.set_defaults(func=claim.complete)
 
-    for name, func in (("update", _update), ("verify", _verify)):
-        p = sub.add_parser(name)
-        p.add_argument(
-            "--input",
-            required=True,
-            help="Directory holding data/results/asvrunner and data/envs, "
-            "such as the output of fetch-results.",
-        )
-        p.add_argument("--store", required=True, help="Root of the Parquet store.")
-        p.add_argument("--workers", type=int, default=None)
-        if name == "update":
-            p.add_argument(
-                "--pandas-repo",
-                help="Clone of pandas, to store commit titles and PR numbers.",
-            )
-        p.set_defaults(func=func)
+    p = sub.add_parser("update")
+    p.add_argument(
+        "--input",
+        required=True,
+        help="Directory holding data/results/asvrunner and data/envs, "
+        "such as the output of fetch-results.",
+    )
+    p.add_argument("--store", required=True, help="Root of the Parquet store.")
+    p.add_argument("--workers", type=int, default=None)
+    p.add_argument(
+        "--pandas-repo",
+        help="Clone of pandas, to store commit titles and PR numbers.",
+    )
+    p.set_defaults(func=_update)
 
     p = sub.add_parser("site")
     p.add_argument("--store", required=True, help="Root of the Parquet store.")

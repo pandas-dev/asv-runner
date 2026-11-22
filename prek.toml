@@ -1,0 +1,47 @@
+# Configuration file for `prek`, a git hook framework written in Rust.
+# See https://prek.j178.dev for more information.
+#:schema https://www.schemastore.org/prek.json
+
+[[repos]]
+repo = "https://github.com/pre-commit/pre-commit-hooks"
+rev = "v6.0.0"
+hooks = [
+  { id = "debug-statements" },
+  { id = "end-of-file-fixer" },
+  { id = "trailing-whitespace" }
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ruff-pre-commit"
+rev = "v0.17.6"
+hooks = [
+  {
+    id = "ruff-check",
+    args = ["--fix"]
+  },
+  { id = "ruff-format" }
+]
+
+[[repos]]
+repo = "https://github.com/codespell-project/codespell"
+rev = "v2.4.3"
+hooks = [
+  {
+    id = "codespell",
+    types_or = [
+      "python",
+      "rst",
+      "markdown"
+    ]
+  }
+]
+
+[[repos]]
+repo = "https://github.com/astral-sh/ty-pre-commit"
+rev = "v0.0.107"
+hooks = [
+  {
+    id = "ty",
+    args = ["--all-extras"]
+  }
+]

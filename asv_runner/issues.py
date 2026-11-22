@@ -12,7 +12,6 @@ what changed and how to add the commit to ``breaks.toml``.
 from __future__ import annotations
 
 import json
-import subprocess
 import time
 import urllib.parse
 from collections import Counter
@@ -25,8 +24,8 @@ import polars as pl
 from asv_runner import breaks as breaks_mod
 from asv_runner import regressions, series, site
 from asv_runner.store import Store
+from asv_runner.util import gh, github_repo, time_to_str
 
-REPO = "pandas-dev/asv-runner"
 PANDAS = "pandas-dev/pandas"
 COMMIT_URL = f"https://github.com/{PANDAS}/commit/"
 COMPARE_URL = f"https://github.com/{PANDAS}/compare/"
@@ -41,19 +40,6 @@ TOOLING = {"asv", "asv_runner"}
 COMPILERS = {"gcc", "gxx", "clang", "clangxx", "c-compiler", "cxx-compiler"}
 
 
-def time_to_str(x: float) -> str:
-    magnitude = abs(x)
-    if magnitude >= 1.0:
-        result = f"{magnitude:0.3f}s"
-    elif magnitude >= 0.001:
-        result = f"{magnitude * 1000:0.3f}ms"
-    elif magnitude >= 0.000001:
-        result = f"{magnitude * (1000**2):0.3f}us"
-    else:
-        result = f"{magnitude * (1000**3):0.3f}ns"
-    return ("-" if x < 0 else "") + result
-
-
 # -- GitHub access ------------------------------------------------------------
 
 
@@ -63,21 +49,17 @@ class GitHub:
 
     def __init__(self, dry_run: bool) -> None:
         self.dry_run = dry_run
+        self.repo = github_repo()
         self.would_create: list[dict] = []
 
-    def _gh(self, args: list[str], input: str | None = None) -> str:
-        return subprocess.run(
-            ["gh", *args], input=input, capture_output=True, text=True, check=True
-        ).stdout
-
     def api(self, path: str) -> Any:
-        return json.loads(self._gh(["api", path]))
+        return json.loads(gh(["api", path]))
 
     def issue_titles(self, sha: str) -> list[str]:
         """Titles of issues whose title mentions ``sha``."""
-        out = self._gh(
+        out = gh(
             [
-                *("search", "issues", "--repo", REPO, "--match", "title", sha),
+                *("search", "issues", "--repo", self.repo, "--match", "title", sha),
                 *("--json", "title", "--jq", ".[].title"),
             ]
         )
@@ -101,14 +83,17 @@ class GitHub:
                 {"title": title, "body": body, "comment": comment, "labels": labels}
             )
             return
-        args = ["issue", "create", "--repo", REPO, "--title", title, "--body-file", "-"]
+        args = [
+            *("issue", "create", "--repo", self.repo),
+            *("--title", title, "--body-file", "-"),
+        ]
         for label in labels:
             args += ["--label", label]
-        url = self._gh(args, input=body).strip()
+        url = gh(args, input=body).strip()
         if comment:
             number = url.rsplit("/", 1)[-1]
-            self._gh(
-                ["issue", "comment", number, "--repo", REPO, "--body-file", "-"],
+            gh(
+                ["issue", "comment", number, "--repo", self.repo, "--body-file", "-"],
                 input=comment,
             )
 
@@ -332,7 +317,8 @@ def mass_change_body(
         body += f"- {label}: {', '.join(links)}\n"
     body += f"\n[All changes at this commit]({site_url}#commit/{ctx.sha})\n\n"
 
-    breaks_url = f"https://github.com/{REPO}/blob/main/asv_runner/breaks.toml"
+    repo_url = f"https://github.com/{github_repo()}"
+    breaks_url = f"{repo_url}/blob/main/asv_runner/breaks.toml"
     body += (
         "**What to do**\n"
         "1. If the cause is the environment or tooling (most likely when a row in "

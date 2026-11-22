@@ -9,7 +9,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  # The hourly benchmark runs (run_asvs_*.yaml) upload their results as
+  # The hourly benchmark runs (run_asvs.yaml) upload their results as
   # artifacts named result-<sha>; this workflow stores them in Parquet on
   # STORE_BRANCH. CLAIMS_BRANCH holds the hourly runs' leases.
   STORE_BRANCH: pandas_2026_01_04_v2
@@ -68,8 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python -m asv_runner fetch-results \
-            --store store/data --out input --repo "$GITHUB_REPOSITORY"
+          python -m asv_runner fetch-results --store store/data --out input
 
       - name: Update store
         run: |
@@ -100,20 +99,6 @@ jobs:
           else
             git push origin "$STORE_BRANCH"
           fi
-
-      # Issues opened while the site was served at /next/ link there; forward
-      # those links to the root, keeping the #... part that selects the chart.
-      - name: Redirect /next/
-        run: |
-          mkdir site/next
-          cat > site/next/index.html <<'EOF'
-          <!doctype html>
-          <meta charset="utf-8">
-          <title>pandas benchmarks</title>
-          <script>location.replace("../" + location.hash);</script>
-          <noscript><meta http-equiv="refresh" content="0; url=../"></noscript>
-          <a href="../">pandas benchmarks</a>
-          EOF
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5

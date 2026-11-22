@@ -2,7 +2,7 @@
 
 Subcommands invoked from .github/workflows/*.yaml:
 
-Hourly benchmark run (run_asvs_*.yaml), standard library only:
+Hourly benchmark run (run_asvs.yaml), standard library only:
   claim       - lease next pandas SHA (new or stale retry), update shas.txt, push
   benchmark   - run asv machine + asv run for a target SHA
   stage       - zstd-compress the run's result and env files for upload as an
@@ -159,7 +159,6 @@ def main() -> int | None:
     p = sub.add_parser("fetch-results")
     p.add_argument("--store", required=True, help="Root of the Parquet store.")
     p.add_argument("--out", required=True, help="Directory to extract results into.")
-    p.add_argument("--repo", required=True, help="OWNER/REPO holding the artifacts.")
     p.set_defaults(func=_fetch_results)
 
     p = sub.add_parser("check-results")

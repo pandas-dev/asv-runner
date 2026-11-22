@@ -12,13 +12,13 @@ from __future__ import annotations
 import argparse
 import io
 import json
-import subprocess
 import zipfile
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from asv_runner.claim import read_claims
 from asv_runner.store import Store
+from asv_runner.util import gh_bytes, github_repo
 
 ARTIFACT_PREFIX = "result-"
 # A done lease older than this whose results are neither stored nor uploaded
@@ -26,13 +26,9 @@ ARTIFACT_PREFIX = "result-"
 LOST_AFTER = timedelta(days=2)
 
 
-def _gh(args: list[str]) -> bytes:
-    return subprocess.run(["gh", *args], capture_output=True, check=True).stdout
-
-
 def list_result_artifacts(repo: str) -> list[dict]:
     """Unexpired ``result-<sha>`` artifacts, oldest first."""
-    out = _gh(
+    out = gh_bytes(
         [
             *("api", "--paginate", f"repos/{repo}/actions/artifacts?per_page=100"),
             *("--jq", ".artifacts[] | {id, name, expired, created_at}"),
@@ -50,7 +46,7 @@ def list_result_artifacts(repo: str) -> list[dict]:
 
 
 def download(repo: str, artifact_id: int) -> bytes:
-    return _gh(["api", f"repos/{repo}/actions/artifacts/{artifact_id}/zip"])
+    return gh_bytes(["api", f"repos/{repo}/actions/artifacts/{artifact_id}/zip"])
 
 
 def fetch(store: Store, out: Path, repo: str) -> list[str]:
@@ -87,7 +83,7 @@ def lost_results(
 
 
 def fetch_cmd(args: argparse.Namespace) -> int:
-    fetched = fetch(Store(Path(args.store)), Path(args.out), args.repo)
+    fetched = fetch(Store(Path(args.store)), Path(args.out), github_repo())
     print(f"Downloaded results for {len(fetched)} commits.")
     return 0
 

@@ -1,7 +1,6 @@
 """Stage asv outputs (zstd-compressed per-sha files) for upload as an artifact.
 
-The output directory has the layout of the old results branch, which
-``python -m asv_runner update`` reads::
+The output directory has the layout that ``python -m asv_runner update`` reads::
 
     data/results/benchmarks.json
     data/results/asvrunner/<sha>.json.zst

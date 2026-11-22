@@ -63,8 +63,16 @@ class Series:
         are cast to float. ``names`` limits the result to those benchmarks.
         """
         scan = pl.scan_parquet(self.store.root / "values" / "*" / "data.parquet")
+        runs = self.runs.select("i", "name", "grid", "version")
         if names is not None:
             scan = scan.filter(pl.col("name").is_in(names))
+            runs = runs.filter(pl.col("name").is_in(names))
+        # The scan is joined once, on (sha, name), so Polars has no join order
+        # to choose. Joining `commits` on sha and then `runs` on (i, name) in
+        # one lazy query let Polars 2.1 join `runs` on name alone first when
+        # its row estimates tipped that way: every result times every run of
+        # its benchmark, which ran the nightly job out of memory.
+        runs = runs.join(self.commits.select("sha", "i"), on="i")
         # Collected before joining `keys`: as one lazy query, Polars 2.1 joins
         # `runs` to `keys` first, which is one row per result for the whole
         # history regardless of `names` (~25 GB on the full store).
@@ -77,11 +85,7 @@ class Series:
                 .fill_nan(None)
                 .alias("value"),
             )
-            .join(self.commits.lazy().select("sha", "i"), on="sha")
-            .join(
-                self.runs.lazy().select("i", "name", "grid", "version"),
-                on=["i", "name"],
-            )
+            .join(runs.lazy(), on=["sha", "name"])
             .collect()
         )
         return with_grid.join(self.keys, on=["grid", "combo"]).select(

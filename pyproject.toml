@@ -26,9 +26,9 @@ classifiers=[
 ]
 
 [project.urls]
-Documentation = "https://github.com/rhshadrach/asv-runner/tree/main#readme"
-Source = "https://github.com/rhshadrach/asv-runner"
-Tracker = "https://github.com/rhshadrach/asv-runner/issues"
+Documentation = "https://github.com/pandas-dev/asv-runner/tree/main#readme"
+Source = "https://github.com/pandas-dev/asv-runner"
+Tracker = "https://github.com/pandas-dev/asv-runner/issues"
 
 [build-system]
 requires = ["setuptools"]
@@ -47,9 +47,6 @@ test = ["pandas", "pytest"]
 dev = ["asv_runner[lint, test]"]
 
 [tool.ruff.lint]
-# Enable Pyflakes (`F`) and a subset of the pycodestyle (`E`)  codes by default.
-# Unlike Flake8, Ruff doesn't enable pycodestyle warnings (`W`) or
-# McCabe complexity (`C901`) by default.
 select = [
     "A",   # flake8-builtins
     # "ANN", # flake8-annotations

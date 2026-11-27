@@ -71,7 +71,10 @@ jobs:
 
       - name: Build pandas
         if: steps.claim.outputs.new_commit == 'yes'
-        run: pixi run --environment asv build-pandas --editable -Csetup-args="--werror"
+        # Since pandas-dev/pandas#72298 the task builds editable with --werror by
+        # default and rejects these as arguments. Commits from before it get a
+        # regular install without --werror.
+        run: pixi run --environment asv build-pandas
 
       - name: Run ASV Benchmarks
         if: steps.claim.outputs.new_commit == 'yes'

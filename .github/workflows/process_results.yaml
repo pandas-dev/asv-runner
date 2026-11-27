@@ -17,9 +17,12 @@ concurrency:
 
 env:
   # The hourly benchmark runs (run_asvs.yaml) upload their results as
-  # artifacts named result-<sha>; this workflow stores them in Parquet on
-  # STORE_BRANCH. CLAIMS_BRANCH holds the hourly runs' leases.
-  STORE_BRANCH: pandas_2026_01_04_v2
+  # artifacts named result-<sha>; this workflow stores them in Parquet under
+  # data/ in the Hugging Face dataset HF_DATASET. CLAIMS_BRANCH holds the
+  # hourly runs' leases.
+  # The dataset has the same name as this GitHub repo; never derive one from
+  # the other.
+  HF_DATASET: pandas-dev/asv-runner
   CLAIMS_BRANCH: asv-claims
   PYTHON_VERSION: "3.14"
   SITE_URL: https://pandas-dev.github.io/asv-runner/
@@ -35,9 +38,10 @@ jobs:
       run:
         shell: bash -e {0}
     permissions:
-      contents: write # push the store branch
+      contents: read # check out the code and the claims branch
       issues: write
       actions: read # download result artifacts
+      id-token: write # Hugging Face Trusted Publishers
     outputs:
       site: ${{ steps.site.outputs.ready }}
     steps:
@@ -45,19 +49,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           path: code
-
-      - name: Checkout the store branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          url="https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          if git ls-remote --exit-code --heads "$url" "$STORE_BRANCH" > /dev/null; then
-            git clone --quiet --depth 1 --branch "$STORE_BRANCH" "$url" store
-          else
-            echo "$STORE_BRANCH does not exist yet; starting an empty store."
-            git init --quiet -b "$STORE_BRANCH" store
-            git -C store remote add origin "$url"
-          fi
 
       # Commit objects only (no trees or files): enough for commit titles.
       - name: Clone pandas history
@@ -70,6 +61,12 @@ jobs:
 
       - name: Install asv-runner
         run: pip install ./code
+
+      # The dataset is public, so reading needs no token.
+      - name: Download the store
+        run: |
+          python -m asv_runner pull-store --dataset "$HF_DATASET" \
+            --out store --revision-file hf-revision.txt
 
       - name: Download new results
         env:
@@ -100,22 +97,16 @@ jobs:
       - name: Build site
         run: python -m asv_runner site --store store/data --out site
 
-      # A single orphan commit, so the branch never accumulates history.
+      # One commit on top of the one downloaded; fails if the dataset moved on.
+      # The Trusted Publisher on the dataset only accepts this workflow on
+      # main, so runs from other branches fail here.
       - name: Push store
-        working-directory: store
+        env:
+          HF_OIDC_RESOURCE: datasets/${{ env.HF_DATASET }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          expected=$(git rev-parse --verify --quiet HEAD || true)
-          git checkout --quiet --orphan fresh
-          git add -A
-          git commit --quiet -m "Store"
-          git branch -M fresh "$STORE_BRANCH"
-          if [ -n "$expected" ]; then
-            git push --force-with-lease="$STORE_BRANCH:$expected" origin "$STORE_BRANCH"
-          else
-            git push origin "$STORE_BRANCH"
-          fi
+          python -m asv_runner push-store --dataset "$HF_DATASET" \
+            --store store/data --revision-file hf-revision.txt \
+            --message "Update store (run $GITHUB_RUN_ID)"
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v5
@@ -139,6 +130,15 @@ jobs:
           fi
           git clone --quiet --depth 1 --branch "$CLAIMS_BRANCH" "$url" claims
           python -m asv_runner check-results --store store/data --claims claims/data/shas.txt
+
+      # Once the oldest dataset commit is over 30 days old, squash history to
+      # one commit, if check-store passes between that commit and this push.
+      - name: Squash store history
+        env:
+          HF_OIDC_RESOURCE: datasets/${{ env.HF_DATASET }}
+        run: |
+          python -m asv_runner squash-store --dataset "$HF_DATASET" \
+            --store store/data --revision-file hf-revision.txt
 
   deploy:
     name: Deploy Pages

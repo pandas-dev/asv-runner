@@ -11,9 +11,8 @@ Layout under the store root::
     commit_info.parquet                  pandas commit title and PR number
 
 ``benchmarks`` and ``values`` are partitioned by ISO week of the commit date so
-that every file stays under GitHub's file size limits while the store is
-committed to a git branch, an update rewrites only the weeks its commits fall
-in, and readers that need recent history read only recent weeks. Within a
+that an update rewrites, and uploads, only the weeks its commits fall in, and
+readers that need recent history read only recent weeks. Within a
 partition, rows are sorted by benchmark, parameter combination, and commit date,
 which is what makes the noisy float columns compress well.
 
@@ -43,7 +42,7 @@ import zstandard
 
 from asv_runner import envs, results
 
-# GitHub rejects files over 100 MB and warns over 50 MB.
+# A guard against a partition growing unexpectedly; weekly files are 8-14 MB.
 MAX_FILE_BYTES = 50_000_000
 RESULT_SUFFIX = ".json.zst"
 ENV_SUFFIX = ".yml.zst"

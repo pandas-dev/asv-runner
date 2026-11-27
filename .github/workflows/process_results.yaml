@@ -3,6 +3,13 @@ on:
   schedule:
     - cron: "20 3 * * *"
   workflow_dispatch:
+    inputs:
+      skip_check_store:
+        description: >-
+          Skip check-store, for an update that deliberately changes stored rows
+          (such as a schema migration).
+        type: boolean
+        default: false
 
 concurrency:
   group: process-results
@@ -70,10 +77,20 @@ jobs:
         run: |
           python -m asv_runner fetch-results --store store/data --out input
 
+      - name: Keep the store as downloaded
+        run: |
+          mkdir -p store/data
+          cp -a store/data store-before
+
       - name: Update store
         run: |
           python -m asv_runner update \
             --input input --store store/data --pandas-repo pandas --workers 4
+
+      # Nothing is pushed if the update changed rows that were already stored.
+      - name: Check store
+        if: ${{ !inputs.skip_check_store }}
+        run: python -m asv_runner check-store --old store-before --new store/data
 
       - name: Raise issues
         env:

@@ -16,6 +16,7 @@ Nightly processing (process_results.yaml), needs the package's dependencies:
   issues    - open GitHub issues for new regressions (or write them to a file)
   fetch-results - download result artifacts of commits not yet stored
   check-results - fail if a completed lease's results were never stored
+  check-store - fail if an update changed rows already in the store
 """
 
 from __future__ import annotations
@@ -96,6 +97,12 @@ def _check_results(args: argparse.Namespace) -> int:
     return artifacts.check_cmd(args)
 
 
+def _check_store(args: argparse.Namespace) -> int:
+    from asv_runner import check_store
+
+    return check_store.check_cmd(args)
+
+
 def main() -> int | None:
     parser = argparse.ArgumentParser(description="CI orchestration for asv-runner")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -165,6 +172,11 @@ def main() -> int | None:
     p.add_argument("--store", required=True, help="Root of the Parquet store.")
     p.add_argument("--claims", required=True, help="The claims branch's shas.txt.")
     p.set_defaults(func=_check_results)
+
+    p = sub.add_parser("check-store")
+    p.add_argument("--old", required=True, help="Root of the store before the update.")
+    p.add_argument("--new", required=True, help="Root of the store after the update.")
+    p.set_defaults(func=_check_store)
 
     args = parser.parse_args()
     return args.func(args)

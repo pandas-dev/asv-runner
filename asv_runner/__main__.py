@@ -17,6 +17,9 @@ Nightly processing (process_results.yaml), needs the package's dependencies:
   fetch-results - download result artifacts of commits not yet stored
   check-results - fail if a completed lease's results were never stored
   check-store - fail if an update changed rows already in the store
+  pull-store  - download the store from its Hugging Face dataset
+  push-store  - upload the store to its Hugging Face dataset as one commit
+  squash-store - squash the dataset's history once it is old enough
 """
 
 from __future__ import annotations
@@ -103,6 +106,24 @@ def _check_store(args: argparse.Namespace) -> int:
     return check_store.check_cmd(args)
 
 
+def _pull_store(args: argparse.Namespace) -> int:
+    from asv_runner import hub
+
+    return hub.pull_cmd(args)
+
+
+def _push_store(args: argparse.Namespace) -> int:
+    from asv_runner import hub
+
+    return hub.push_cmd(args)
+
+
+def _squash_store(args: argparse.Namespace) -> int:
+    from asv_runner import hub
+
+    return hub.squash_cmd(args)
+
+
 def main() -> int | None:
     parser = argparse.ArgumentParser(description="CI orchestration for asv-runner")
     sub = parser.add_subparsers(dest="cmd", required=True)
@@ -177,6 +198,45 @@ def main() -> int | None:
     p.add_argument("--old", required=True, help="Root of the store before the update.")
     p.add_argument("--new", required=True, help="Root of the store after the update.")
     p.set_defaults(func=_check_store)
+
+    dataset_help = (
+        "Hugging Face dataset holding the store, such as pandas-dev/asv-runner."
+    )
+    revision_help = (
+        "File recording the dataset commit the store was downloaded at "
+        "(written by pull-store, updated by push-store)."
+    )
+
+    p = sub.add_parser("pull-store")
+    p.add_argument("--dataset", required=True, help=dataset_help)
+    p.add_argument(
+        "--out",
+        required=True,
+        help="Directory to download into; the store is OUT/data.",
+    )
+    p.add_argument("--revision-file", required=True, help=revision_help)
+    p.set_defaults(func=_pull_store)
+
+    p = sub.add_parser("push-store")
+    p.add_argument("--dataset", required=True, help=dataset_help)
+    p.add_argument("--store", required=True, help="Root of the Parquet store.")
+    p.add_argument("--revision-file", required=True, help=revision_help)
+    p.add_argument("--message", default="Update store", help="Commit message.")
+    p.set_defaults(func=_push_store)
+
+    p = sub.add_parser("squash-store")
+    p.add_argument("--dataset", required=True, help=dataset_help)
+    p.add_argument(
+        "--store", required=True, help="Root of the Parquet store just pushed."
+    )
+    p.add_argument("--revision-file", required=True, help=revision_help)
+    p.add_argument(
+        "--max-age-days",
+        type=int,
+        default=30,
+        help="Squash once the oldest commit is older than this.",
+    )
+    p.set_defaults(func=_squash_store)
 
     args = parser.parse_args()
     return args.func(args)
